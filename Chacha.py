@@ -15,8 +15,8 @@ class Chacha:
 
 
         self.init_matrice = [c_uint32() for _ in range(16)]
-        self.keystream = [c_uint32() for _ in range(16)]
-        self.enc_msg = [c_uint32() for _ in range(16)]
+        self.keystream = []
+        self.enc_msg = []
 
         self.init_matrice[0] = c_uint32(0x65787061)
         self.init_matrice[1] = c_uint32(0x6e642033)
@@ -39,13 +39,27 @@ class Chacha:
 
         self.tour = 0
         self.qr = 0
+        self.msg_index = 0
+        self.done = False
 
     def next_step(self):
+        if self.done == True:
+            return
+
         if self.tour == 10:
+            self.keystream.append([c_uint32() for _ in range(16)])
+            self.enc_msg.append([c_uint32() for _ in range(16)])
             for i in range(16):
-                self.keystream[i].value = self.init_matrice[i].value + self.matrice[i].value
-                self.enc_msg[i].value = self.keystream[i].value ^ self.msg_cint[i].value
-                #TODO faire avancer self.msg_cint
+                self.keystream[-1][i].value = self.init_matrice[i].value + self.matrice[i].value
+                self.enc_msg[-1][i].value = self.keystream[-1][i].value ^ self.msg_cint[i].value
+
+            self.msg_index += 1
+            if self.msg_index*64 == len(self.msg):
+                self.done = True
+            for i in range(16):
+                index = self.msg_index*64 + i*4
+                v = c_uint32(int.from_bytes(self.msg[index : index+4]))
+                self.msg_cint[i] = v
 
             self.tour = 0
             self.matrice = self.init_matrice.copy()
@@ -115,10 +129,11 @@ class Chacha:
 
     def decrypt(self):
         res = ""
-        for i in range(16):
-            v = self.enc_msg[i].value ^ self.keystream[i].value
-            for j in range(4):
-                res += chr(v>>((3-j)*8) & 0xff)
+        for k in range(len(self.keystream)):
+            for i in range(16):
+                v = self.enc_msg[k][i].value ^ self.keystream[k][i].value
+                for j in range(4):
+                    res += chr(v>>((3-j)*8) & 0xff)
 
         return res
 
@@ -136,28 +151,21 @@ def print_matrice(C):
     print()
 
 def main():
-    a = c_uint32(0xff00ff00)
-    ROTl(a, 8)
-    print(f"{a.value:08x}")
-    ROTl(a, 4)
-    print(f"{a.value:08x}")
-    print()
-
-    C = Chacha("Hello, World!" * 100 + "\n2e ligne")
+    C = Chacha("Hello, World!" * 10 + "\n2e ligne\nencore plus de donnees dans ce message qui est super long et qui va necessiter beaucoup de blocs de 512 octets")
 
     print_matrice(C)
     C.next_step()
     print_matrice(C)
 
-    for i in range(500):
+    while not C.done:
         C.next_step()
 
-    for i in range(16):
-        print(f"{C.enc_msg[i].value:08x}", end="")
+    for k in range(len(C.enc_msg)):
+        for i in range(16):
+            v = C.enc_msg[k][i].value
+            print(f"{v:08x}", end="")
     print()
-
     print(C.decrypt())
-
 
 
 if __name__ == "__main__":
