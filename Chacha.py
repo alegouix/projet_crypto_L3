@@ -113,6 +113,16 @@ class Chacha:
         b.value = b.value ^ c.value
         ROTl(b, 7)
 
+    def decrypt(self):
+        res = ""
+        for i in range(16):
+            v = self.enc_msg[i].value ^ self.keystream[i].value
+            for j in range(4):
+                res += chr(v>>((3-j)*8) & 0xff)
+
+        return res
+
+
 
 def ROTl(x: c_uint32, n: int):
     a = x.value << n
@@ -133,7 +143,7 @@ def main():
     print(f"{a.value:08x}")
     print()
 
-    C = Chacha("mon message")
+    C = Chacha("Hello, World!" * 100 + "\n2e ligne")
 
     print_matrice(C)
     C.next_step()
@@ -145,6 +155,9 @@ def main():
     for i in range(16):
         print(f"{C.enc_msg[i].value:08x}", end="")
     print()
+
+    print(C.decrypt())
+
 
 
 if __name__ == "__main__":
