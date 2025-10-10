@@ -50,5 +50,4 @@ def poly1305(key, msg):
     eval = eval_poly_mod(pl, interpreted_key)
     return reduce(eval)
 
-
 print(poly1305(key, msg))

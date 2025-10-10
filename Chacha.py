@@ -1,6 +1,11 @@
 from ctypes import c_uint32
 from random import randint, seed
 
+from poly1305 import poly1305
+
+
+# TODO switch endian
+
 class Chacha:
     def __init__(self, msg):
         self.msg = msg.encode("ascii")
@@ -8,6 +13,7 @@ class Chacha:
         if len(msg) % 64 != 0:
             self.msg += bytes(64 - len(msg) % 64)
 
+        # matrice des 512 octets du message sur lesquels on travaille
         self.msg_cint = []
         for i in range(16):
             v = c_uint32(int.from_bytes(self.msg[i*4 : (i+1)*4]))
@@ -15,13 +21,12 @@ class Chacha:
 
 
         self.init_matrice = [c_uint32() for _ in range(16)]
-        self.keystream = []
-        self.enc_msg = []
 
         self.init_matrice[0] = c_uint32(0x65787061)
         self.init_matrice[1] = c_uint32(0x6e642033)
         self.init_matrice[2] = c_uint32(0x322d6279)
         self.init_matrice[3] = c_uint32(0x7465206b)
+
 
         self.key = [c_uint32(i) for i in range(8)]
         for i in range(8):
@@ -30,22 +35,66 @@ class Chacha:
         self.compteur = c_uint32(1)
         self.init_matrice[12] = c_uint32(self.compteur.value) # copie pour éviter effets de bord
 
+        # le keystream et le message chiffré sont stockés dans une liste
+        # de blocs de 512 octets
+        self.keystream = []
+        self.enc_msg = []
+
         seed(0) # pour tester c'est plus pratique d'avoir tjrs la meme chose
+
         # gen nonce
+        # TODO better nonce gen https://datatracker.ietf.org/doc/html/rfc7539#section-2.3
         for i in range(3):
             self.init_matrice[13 + i] = c_uint32(randint(0, 0xffffffff))
 
         self.matrice = self.init_matrice.copy()
 
+        self.gen_poly1305_MAC()
+
+        # variables d'état
         self.tour = 0
         self.qr = 0
         self.msg_index = 0
         self.done = False
 
+    def gen_poly1305_MAC(self):
+        mat = self.init_matrice.copy()
+        #reset counter
+        mat[12] = c_uint32(0)
+        for i in range(10):
+            c1 = mat[0]
+            c2 = mat[1]
+            c3 = mat[2]
+            c4 = mat[3]
+            k1 = mat[4]
+            k2 = mat[5]
+            k3 = mat[6]
+            k4 = mat[7]
+            k5 = mat[8]
+            k6 = mat[9]
+            k7 = mat[10]
+            k8 = mat[11]
+            ct = mat[12]
+            n1 = mat[13]
+            n2 = mat[14]
+            n3 = mat[15]
+            self.QR(c1, k1, k5, ct)
+            self.QR(c2, k2, k6, n1)
+            self.QR(c3, k3, k7, n2)
+            self.QR(c4, k4, k8, n3)
+            self.QR(c1, k2, k7, n3)
+            self.QR(c2, k3, k8, ct)
+            self.QR(c3, k4, k5, n1)
+            self.QR(c4, k1, k5, n2)
+
+        key = b"".join([bytes(mat[i]) for i in range(8)])
+
+        self.MAC = poly1305(key, self.msg)
+
+
     def next_step(self):
         if self.done == True:
             return
-
         if self.tour == 10:
             self.keystream.append([c_uint32() for _ in range(16)])
             self.enc_msg.append([c_uint32() for _ in range(16)])
@@ -160,11 +209,15 @@ def main():
     while not C.done:
         C.next_step()
 
+    print("ENCODED DATA :")
     for k in range(len(C.enc_msg)):
         for i in range(16):
             v = C.enc_msg[k][i].value
             print(f"{v:08x}", end="")
-    print()
+    print("\n\nMAC : ", end="")
+    for b in C.MAC:
+        print(f"{b:02x}", end="")
+    print("\n\nDECODED DATA :")
     print(C.decrypt())
 
 
