@@ -1,0 +1,89 @@
+/* Style sombre global */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    margin: 40px;
+}
+
+.page-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #1e1e1e;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+/* Titres */
+h2, h3 {
+    color: #ffffff;
+    margin-bottom: 10px;
+    border-left: 4px solid #a6adb3;
+    padding-left: 10px;
+}
+
+/* Champ input */
+input[type="text"] {
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 5px;
+    margin-bottom: 30px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 5px;
+    font-size: 1rem;
+    color: #f1f1f1;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+    background: #2b2b2b;
+    border: 2px solid #444;
+}
+
+th {
+    background-color: #c4c6c7;
+    color: #000000;
+    padding: 10px;
+    text-align: left;
+    font-weight: bold;
+}
+
+td {
+    padding: 10px;
+    border: 1px solid #444;
+    color: #e0e0e0;
+}
+
+/* Conteneur flex pour la matrice */
+.containerCtrlMatrice {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .containerCtrlMatrice {
+        flex-direction: column;
+    }
+
+    input[type="text"] {
+        font-size: 0.9rem;
+    }
+}
+
+/* Liens et autres éléments interactifs (optionnel) */
+a, button {
+    color: #4dabf7;
+    text-decoration: none;
+}
+
+a:hover, button:hover {
+    text-decoration: underline;
+}
