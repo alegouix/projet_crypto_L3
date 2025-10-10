@@ -25,7 +25,6 @@ def poly(chunks):
 
 def eval_poly_mod(poly, key, p=(2**130 - 5)):
 
-    key_int = int.from_bytes(key, 'little')
     result = 0
     power_of_key = 1
 
