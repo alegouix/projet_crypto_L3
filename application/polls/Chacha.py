@@ -30,10 +30,10 @@ class Chacha:
 
         self.key = [c_uint32(i) for i in range(8)]
         for i in range(8):
-                self.init_matrice[4 + i] = self.key[i]
+                self.init_matrice[4 + i].value = self.key[i].value
 
         self.compteur = c_uint32(1)
-        self.init_matrice[12] = c_uint32(self.compteur.value) # copie pour éviter effets de bord
+        self.init_matrice[12].value = self.compteur.value # copie pour éviter effets de bord
 
         # le keystream et le message chiffré sont stockés dans une liste
         # de blocs de 512 octets
@@ -47,7 +47,7 @@ class Chacha:
         for i in range(3):
             self.init_matrice[13 + i] = c_uint32(randint(0, 0xffffffff))
 
-        self.matrice = self.init_matrice.copy()
+        self.matrice = copy_cuint32_mat(self.init_matrice)
 
         self.gen_poly1305_MAC()
 
@@ -58,7 +58,7 @@ class Chacha:
         self.done = False
 
     def gen_poly1305_MAC(self):
-        mat = self.init_matrice.copy()
+        mat = copy_cuint32_mat(self.init_matrice)
         #reset counter
         mat[12] = c_uint32(0)
         for i in range(10):
@@ -111,7 +111,7 @@ class Chacha:
                 self.msg_cint[i] = v
 
             self.tour = 0
-            self.matrice = self.init_matrice.copy()
+            self.matrice = copy_cuint32_mat(self.init_matrice)
             self.compteur.value += 1
             self.matrice[12] = c_uint32(self.compteur.value)
 
@@ -191,6 +191,9 @@ class Chacha:
 def ROTl(x: c_uint32, n: int):
     a = x.value << n
     x.value = a | (a >> 32)
+
+def copy_cuint32_mat(matrice):
+    return [c_uint32(matrice[i].value) for i in range(len(matrice))]
 
 def print_matrice(C):
     for i in range(16):
