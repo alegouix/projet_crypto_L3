@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from .Chacha import Chacha
 
 def index(request):
-    c = Chacha("mon message")
+    c = Chacha("mon message super long qui fait plusieurs blocs de 512 bits et qui va beaucoup depasser la case d'affichage. voici l'alphabet pour faire encore plus long : abcdefghijklmnopqrstuvwxyz")
     while not c.done:
         c.next_step()
 
