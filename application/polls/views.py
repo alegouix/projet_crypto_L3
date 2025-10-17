@@ -9,8 +9,10 @@ def index(request):
     
     if request.method == "POST" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         message = request.POST.get("message", "")
-        taille_bloc = 5
-        parties = [message[i:i+taille_bloc] for i in range(0, len(message), taille_bloc)]
+        message_hexa = message.encode("utf-8").hex()
+        taille_bloc = 512
+        taille_bloc_hexa = taille_bloc // 4
+        parties = [message_hexa[i:i+taille_bloc_hexa] for i in range(0, len(message_hexa), taille_bloc_hexa)]
 
         c = Chacha(message)
 
