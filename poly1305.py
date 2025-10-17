@@ -1,10 +1,5 @@
 from ctypes import *
 
-key = b'1234567890abcdef'
-msg = b'jaidesprblemesjemedisputainzebiiii'
-
-print(len(key))
-
 def little_end(key):
     return key[::-1]
 
@@ -49,5 +44,3 @@ def poly1305(key, msg):
     pl = poly(divided_msg)
     eval = eval_poly_mod(pl, interpreted_key)
     return reduce(eval)
-
-print(poly1305(key, msg))
