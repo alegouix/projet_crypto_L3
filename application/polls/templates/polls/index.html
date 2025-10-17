@@ -5,18 +5,28 @@
 <div class="page-container">
 
     <h2>Message</h2>
-    <label for="message">Entrez un message :</label>
-    <input type="text" id="message" placeholder="Tapez ici..." />
+    <form id="form" method="POST">
+        {% csrf_token %}
+        <label for="message">Entrez un message :</label>
+        <input type="text" id="message" name="message" placeholder="Tapez ici..." required />
+        <button type="submit">Envoyer</button>
+    </form>
 
     <table>
         <tbody>
-            <tr>
-                <td>Partie 1</td>
-                <td>Partie 2</td>
-                <td>Partie 3</td>
-                <td>Partie 4</td>
-                <td>Partie 5</td>
-            </tr>
+           {% with parties_count=parties|length %}
+                <tr>
+                    {% for part in parties %}
+                        <td>{{ part }}</td>
+                    {% endfor %}
+
+                    {% if parties_count < 5 %}
+                        {% for _ in "12345"|slice:":{{ 5|add:-parties_count }}" %}
+                            <td></td>
+                        {% endfor %}
+                    {% endif %}
+                </tr>
+            {% endwith %}
         </tbody>
     </table>
 
@@ -25,7 +35,7 @@
     <table>
         <tbody>
             <tr>
-                <td>{{ key_str }}</td>
+                <td id="key_str">{{ key_str }}</td>
             </tr>
         </tbody>
     </table>
@@ -36,28 +46,28 @@
         <table>
             <tbody>
                 <tr>
-                    <td>{{ c1 }}</td>
-                    <td>{{ c2 }}</td>
-                    <td>{{ c3 }}</td>
-                    <td>{{ c4 }}</td>
+                    <td id="c1">{{ c1 }}</td>
+                    <td id="c2">{{ c2 }}</td>
+                    <td id="c3">{{ c3 }}</td>
+                    <td id="c4">{{ c4 }}</td>
                 </tr>
                 <tr>
-                    <td>{{ k1 }}</td>
-                    <td>{{ k2 }}</td>
-                    <td>{{ k3 }}</td>
-                    <td>{{ k4 }}</td>
+                    <td id="k1">{{ k1 }}</td>
+                    <td id="k2">{{ k2 }}</td>
+                    <td id="k3">{{ k3 }}</td>
+                    <td id="k4">{{ k4 }}</td>
                 </tr>
                 <tr>
-                    <td>{{ k5 }}</td>
-                    <td>{{ k6 }}</td>
-                    <td>{{ k7 }}</td>
-                    <td>{{ k8 }}</td>
+                    <td id="k5">{{ k5 }}</td>
+                    <td id="k6">{{ k6 }}</td>
+                    <td id="k7">{{ k7 }}</td>
+                    <td id="k8">{{ k8 }}</td>
                 </tr>
                 <tr>
-                    <td>{{ ct }}</td>
-                    <td>{{ n1 }}</td>
-                    <td>{{ n2 }}</td>
-                    <td>{{ n3 }}</td>
+                    <td id="ct">{{ ct }}</td>
+                    <td id="n1">{{ n1 }}</td>
+                    <td id="n2">{{ n2 }}</td>
+                    <td id="n3">{{ n3 }}</td>
                 </tr>
             </tbody>
         </table>
@@ -75,8 +85,54 @@
     <table>
         <tbody>
             <tr>
-                <td style="word-break: break-all">{{ res }}</td>
+                <td style="word-break: break-all" id="res">{{ res }}</td>
             </tr>
         </tbody>
     </table>
 </div>
+
+<script>
+document.getElementById("form").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const message = document.getElementById("message").value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch("", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const parts = data.parties;
+        const tbody = document.querySelector("tbody");
+
+        // Nettoyage du tableau
+        tbody.innerHTML = "";
+
+        const row = document.createElement("tr");
+        for (let i = 0; i < parts.length; i++) {
+            const cell = document.createElement("td");
+            cell.textContent = parts[i] || ""; // Vide si pas assez de parties
+            row.appendChild(cell);
+        }
+
+        tbody.appendChild(row);
+
+        for (const [key, value] of Object.entries(data)) {
+            dom = document.getElementById(key)
+            if(dom != null) {
+                dom.innerHTML = value
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Erreur:", error);
+    });
+});
+</script> 
