@@ -43,6 +43,7 @@ table {
     margin-bottom: 30px;
     background: #2b2b2b;
     border: 2px solid #444;
+    table-layout: fixed;
 }
 
 th {
@@ -57,6 +58,13 @@ td {
     padding: 10px;
     border: 1px solid #444;
     color: #e0e0e0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
+td {
+    word-break: break-all;
 }
 
 /* Conteneur flex pour la matrice */
