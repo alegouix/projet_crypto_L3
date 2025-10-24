@@ -37,6 +37,7 @@ def create_context(c: Chacha):
             "n1": f"{c.matrice[13].value:08x}",
             "n2": f"{c.matrice[14].value:08x}",
             "n3": f"{c.matrice[15].value:08x}",
+            "mac": c.MAC.hex(),
             "res": res,
         }
 
