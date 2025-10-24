@@ -76,6 +76,12 @@
             <tbody>
                 <tr>
                     <td>Donnée de contrôle</td>
+                    <td>
+                        <form id="form_control" method="POST">
+                            {% csrf_token %}
+                            <button type="submit">Prochaine Étape</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -97,6 +103,7 @@ document.getElementById("form").addEventListener("submit", function(event) {
 
     const message = document.getElementById("message").value;
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    console.log(csrfToken);
 
     fetch("", {
         method: "POST",
@@ -109,6 +116,7 @@ document.getElementById("form").addEventListener("submit", function(event) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log(data)
         const parts = data.parties;
         const tbody = document.querySelector("tbody");
 
@@ -135,4 +143,52 @@ document.getElementById("form").addEventListener("submit", function(event) {
         console.error("Erreur:", error);
     });
 });
-</script> 
+
+
+document.getElementById("form_control").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    console.log(csrfToken);
+
+    fetch("", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        //body: new URLSearchParams({ message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        const parts = data.parties;
+        const tbody = document.querySelector("tbody");
+
+        // Nettoyage du tableau
+        tbody.innerHTML = "";
+
+        const row = document.createElement("tr");
+        for (let i = 0; i < parts.length; i++) {
+            const cell = document.createElement("td");
+            cell.textContent = parts[i] || ""; // Vide si pas assez de parties
+            row.appendChild(cell);
+        }
+
+        tbody.appendChild(row);
+
+        for (const [key, value] of Object.entries(data)) {
+            dom = document.getElementById(key)
+            if(dom != null) {
+                dom.innerHTML = value
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Erreur:", error);
+    });
+});
+
+</script>

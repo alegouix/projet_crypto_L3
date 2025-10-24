@@ -1,5 +1,7 @@
 from ctypes import c_uint32
 from random import randint, seed
+import json
+import base64
 
 from .poly1305 import poly1305
 
@@ -185,6 +187,24 @@ class Chacha:
                     res += chr(v>>((3-j)*8) & 0xff)
 
         return res
+
+    def toJSON(self):
+        return json.dumps(
+                self,
+                default=self.encode,
+                sort_keys = True)
+
+    def encode(self, o):
+        if type(o) == bytes:
+            encoded_bytes = base64.b64encode(o).decode('utf-8')
+            return json.dumps(encoded_bytes)
+        elif type(o) == c_uint32:
+            return o.value
+        elif type(o) == Chacha:
+            return o.__dict__
+        else:
+            raise TypeError(type(o))
+
 
 
 
