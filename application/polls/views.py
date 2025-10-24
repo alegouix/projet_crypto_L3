@@ -60,6 +60,7 @@ def index(request):
 
         context = create_context(c)
         context["parties"] = parties
+        context["mac"] =  c.MAC.hex(),
 
         return JsonResponse(context)
 

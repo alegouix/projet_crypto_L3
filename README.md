@@ -4,7 +4,7 @@
 
 ### Prérequis 
 
-Django : ```python3 pip install django```
+Django : ```python3 -m pip install django```
 
 ### Éxécution
 

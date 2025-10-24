@@ -1,9 +1,5 @@
 from ctypes import *
 
-key = b'1234567890abcdef'
-msg = b'jaidesprblemesjemedisputainzebiiii'
-
-print(len(key))
 
 def little_end(key):
     return key[::-1]
@@ -24,7 +20,6 @@ def poly(chunks):
     return new_chunks
 
 def eval_poly_mod(poly, key, p=(2**130 - 5)):
-
     key_int = int.from_bytes(key, 'little')
     result = 0
     power_of_key = 1
@@ -36,9 +31,8 @@ def eval_poly_mod(poly, key, p=(2**130 - 5)):
 
     return result.to_bytes(17, 'little')
 
-def reduce(eval):
-
-    result_int = int.from_bytes(eval, 'little')
+def reduce(evaluation):
+    result_int = int.from_bytes(evaluation, 'little')
     reduced_int = result_int & ((1 << 128) - 1)
     return reduced_int.to_bytes(16, 'little')
 
@@ -47,7 +41,12 @@ def poly1305(key, msg):
     interpreted_key = little_end(key)
     divided_msg = break_msg(msg)
     pl = poly(divided_msg)
-    eval = eval_poly_mod(pl, interpreted_key)
-    return reduce(eval)
+    evaluation = eval_poly_mod(pl, interpreted_key)
+    return reduce(evaluation)
 
-print(poly1305(key, msg))
+
+if __name__ == "__main__":
+    key = b'1234567890abcdef'
+    msg = b'jaidesprblemesjemedisputainzebiiii'
+    print(len(key))
+    print(poly1305(key, msg))
