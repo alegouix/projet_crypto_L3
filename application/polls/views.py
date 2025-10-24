@@ -49,7 +49,8 @@ def index(request):
                 "n2": f"{c.matrice[14].value:08x}",
                 "n3": f"{c.matrice[15].value:08x}",
                 "res": res,
-                "parties": parties
+                "mac": c.MAC.hex(),
+                "parties": parties,
             }
 
         return JsonResponse(context)
