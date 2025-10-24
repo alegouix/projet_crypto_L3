@@ -1,4 +1,7 @@
 {% load static %}
+<head>
+    <meta charset="utf-8"/>
+</head>
 
 <link rel="stylesheet" href="{% static 'polls/style.css' %}">
 
@@ -112,7 +115,6 @@ document.getElementById("form").addEventListener("submit", function(event) {
 
     const message = document.getElementById("message").value;
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    console.log(csrfToken);
 
     fetch("", {
         method: "POST",
@@ -125,7 +127,6 @@ document.getElementById("form").addEventListener("submit", function(event) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data)
         const parts = data.parties;
         const tbody = document.querySelector("tbody");
 
@@ -159,8 +160,6 @@ document.getElementById("form_control").addEventListener("submit", function(even
 
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    console.log(csrfToken);
-
     fetch("", {
         method: "POST",
         headers: {
@@ -168,32 +167,11 @@ document.getElementById("form_control").addEventListener("submit", function(even
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded",
         },
-        //body: new URLSearchParams({ message })
+        body: new URLSearchParams({ "chacha" : {{ chacha }} })
     })
     .then(response => response.json())
     .then(data => {
         console.log(data);
-        const parts = data.parties;
-        const tbody = document.querySelector("tbody");
-
-        // Nettoyage du tableau
-        tbody.innerHTML = "";
-
-        const row = document.createElement("tr");
-        for (let i = 0; i < parts.length; i++) {
-            const cell = document.createElement("td");
-            cell.textContent = parts[i] || ""; // Vide si pas assez de parties
-            row.appendChild(cell);
-        }
-
-        tbody.appendChild(row);
-
-        for (const [key, value] of Object.entries(data)) {
-            dom = document.getElementById(key)
-            if(dom != null) {
-                dom.innerHTML = value
-            }
-        }
     })
     .catch(error => {
         console.error("Erreur:", error);

@@ -1,10 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.safestring import SafeString
+
+import json
+
 from .Chacha import Chacha
 
 def create_context(c: Chacha):
-    print(c.toJSON())
     res = ""
     for k in range(len(c.enc_msg)):
         for i in range(16):
@@ -16,7 +19,7 @@ def create_context(c: Chacha):
         key_str += f"{v.value:08x}"
 
     return {
-            "chacha": c.toJSON(),
+            "chacha": SafeString(c.toJSON()),
             "key_str": key_str,
             "c1": f"{c.matrice[0].value:08x}",
             "c2": f"{c.matrice[1].value:08x}",
@@ -44,23 +47,40 @@ def index(request):
     if request.method == "POST" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         message = request.POST.get("message", "")
         c = Chacha("message")
+        context = create_context(c)
 
         if message != "":
             message_hexa = message.encode("utf-8").hex()
             taille_bloc = 512
             taille_bloc_hexa = taille_bloc // 4
             parties = [message_hexa[i:i+taille_bloc_hexa] for i in range(0, len(message_hexa), taille_bloc_hexa)]
+            context["parties"] = parties
+            context["mac"] =  c.MAC.hex(),
 
         else:
+            print(request.POST)
+            data = json.loads(request.body.decode('utf-8'))
+            obj = data.get("chacha")
+            print(obj)
+            c.MAC = obj.get("MAC")
+            c.compteur = obj.get("compteur")
+            c.done = obj.get("done")
+            c.msg_index = obj.get("msg_index")
+            c.qr = obj.get("qr")
+            c.tour = obj.get("tour")
+
+            c.msg_cint = obj.get("done")
+            c.msg = obj.get("done")
+            c.matrice = obj.get("done")
+            c.keystream = obj.get("done")
+            c.key = obj.get("done")
+            c.init_matrice = obj.get("done")
+            c.enc_msg = obj.get("enc_msg")
             # TODO : reconstruire Chacha à partir du JSON
             # et avance d'une étape
-            pass
 
 
 
-        context = create_context(c)
-        context["parties"] = parties
-        context["mac"] =  c.MAC.hex(),
 
         return JsonResponse(context)
 
