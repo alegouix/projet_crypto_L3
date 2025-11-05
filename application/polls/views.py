@@ -44,6 +44,8 @@ def create_context(chacha: Chacha):
             "mac": chacha.MAC.hex(),
             "res": res,
             "decrypt": decrypt,
+            "tour": chacha.tour,
+            "qr": chacha.qr,
         }
 
 @csrf_exempt

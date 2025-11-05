@@ -43,10 +43,39 @@
             </tr>
         </tbody>
     </table>
-
-
+    
+    
+    <h3>Explications sur l’étape actuelle</h3>
+    <div id="explanation" style="border:1px solid #888; padding:1em; border-radius:10px; background:#1e1e1e; color:white;">
+        En attente de la première étape...
+    </div>
+    
     <h3>Matrice</h3>
     <div class="containerCtrlMatrice">
+        <div class="qr-explanation"
+            style="position:absolute; right:80%; top:50%; width:15%; padding:1em; border-radius:10px; background:#252525; color:white; box-shadow:0 0 10px rgba(0,0,0,0.5);">
+            <h3 style="color:#66ccff;">Quarter Round (QR) – principe</h3>
+            <p>
+                Un *Quarter Round* opère sur 4 mots de 32 bits <b>(a, b, c, d)</b>.
+                Il mélange ces mots en utilisant trois types d’opérations :
+            </p>
+            <ul>
+                <li><b>Addition mod 2³² :</b> <code>a = (a + b) mod 2³²</code></li>
+                <li><b>XOR :</b> <code>d = d XOR a</code></li>
+                <li><b>Rotation gauche :</b> <code>d = ROTL(d, n)</code> (rotation de n bits)</li>
+            </ul>
+            <p>Ces opérations sont répétées selon la séquence :</p>
+            <ol>
+                <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
+                <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
+                <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
+                <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
+            </ol>
+            <p style="font-style:italic; color:#aaa;">
+                Ce processus assure une diffusion forte : chaque bit de la clé, du compteur ou du nonce influence rapidement
+                tout le bloc.
+            </p>
+        </div>
         <table>
             <tbody>
                 <tr>
@@ -75,7 +104,7 @@
                 </tr>
             </tbody>
         </table>
-
+    
         <table>
             <tbody>
                 <tr>
@@ -190,6 +219,7 @@ document.getElementById("form").addEventListener("submit", function(event) {
         tbody.appendChild(row);
 
         changeText(data)
+        updateExplanation(data.tour, data.qr);
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -214,6 +244,7 @@ document.getElementById("form_control_next").addEventListener("submit", function
     .then(response => response.json())
     .then(data => {
         changeText(data)
+        updateExplanation(data.tour, data.qr);
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -238,6 +269,7 @@ document.getElementById("form_control_previous").addEventListener("submit", func
     .then(data => {
         //console.log(data);
         changeText(data)
+        updateExplanation(data.tour, data.qr);
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -283,5 +315,36 @@ document.getElementById("play").addEventListener("click", () => {
 document.getElementById("stop").addEventListener("click", () => {
     run = false;
 });
+
+
+const explanations = [
+    "Initialisation de la matrice avec les constantes de ChaCha20 et la clé de 256 bits.",
+    "QR 1 : Application du premier *Quarter Round* sur la colonne (c1, k1, k5, ct).",
+    "QR 2 : *Quarter Round* sur la colonne (c2, k2, k6, n1).",
+    "QR 3 : *Quarter Round* sur la colonne (c3, k3, k7, n2).",
+    "QR 4 : *Quarter Round* sur la colonne (c4, k4, k8, n3).",
+    "QR 5 : *Quarter Round* sur la diagonale (c1, k2, k7, n3).",
+    "QR 6 : *Quarter Round* sur la diagonale (c2, k3, k8, ct).",
+    "QR 7 : *Quarter Round* sur la diagonale (c3, k4, k5, n1).",
+    "QR 8 : *Quarter Round* sur la diagonale (c4, k1, k6, n2).",
+    "Fin du tour : les huit *Quarter Rounds* sont terminés — incrément du compteur.",
+    "Les 10 tours sont terminés : génération du keystream et chiffrement du bloc.",
+];
+
+function updateExplanation(tour, qr) {
+    const expDiv = document.getElementById("explanation");
+
+    nqr = qr-1
+
+    if(tour === 0 && qr === 0) {
+        expDiv.innerHTML = explanations[0];
+    } else if (tour === 10) {
+        expDiv.innerHTML = explanations[10];
+    } else if (nqr == -1) {
+        expDiv.innerHTML = explanations[9];
+    } else if (nqr < 8) {
+        expDiv.innerHTML = explanations[nqr + 1];
+    } 
+}
 
 </script>
