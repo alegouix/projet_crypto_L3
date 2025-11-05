@@ -79,9 +79,14 @@
         <table>
             <tbody>
                 <tr>
-                    <td>Donnée de contrôle</td>
                     <td>
-                        <form id="form_control" method="POST">
+                        <form id="form_control_previous" method="POST">
+                            {% csrf_token %}
+                            <button type="submit">Étape précédente</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form id="form_control_next" method="POST">
                             {% csrf_token %}
                             <button type="submit">Prochaine Étape</button>
                         </form>
@@ -165,7 +170,7 @@ document.getElementById("form").addEventListener("submit", function(event) {
 });
 
 
-document.getElementById("form_control").addEventListener("submit", function(event) {
+document.getElementById("form_control_next").addEventListener("submit", function(event) {
     event.preventDefault();
 
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -192,5 +197,35 @@ document.getElementById("form_control").addEventListener("submit", function(even
         console.error("Erreur:", error);
     });
 });
+
+document.getElementById("form_control_previous").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch("", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ "command" : "previous" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        for (const [key, value] of Object.entries(data)) {
+            dom = document.getElementById(key)
+            if(dom != null) {
+                dom.innerHTML = value
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Erreur:", error);
+    });
+});
+
 
 </script>

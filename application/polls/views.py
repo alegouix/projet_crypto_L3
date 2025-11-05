@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import SafeString
+from copy import deepcopy
 
 from ctypes import c_uint32
 
@@ -20,9 +21,7 @@ def create_context(chacha: Chacha):
     for v in chacha.key:
         key_str += f"{v.value:08x}"
 
-    decrypt = ""
-    if chacha.done:
-        decrypt = chacha.decrypt()
+    decrypt = chacha.decrypt()
     
     return {
             "key_str": key_str,
@@ -83,19 +82,27 @@ def index(request):
             c.qr = prev.qr
             c.tour = prev.tour
 
-            c.msg_cint = prev.msg_cint.copy()
-            c.matrice = prev.matrice.copy()
-            c.init_matrice = prev.init_matrice.copy()
-            c.key = prev.key.copy()
+            c.msg_cint = deepcopy(prev.msg_cint)
+            c.matrice = deepcopy(prev.matrice)
+            c.init_matrice = deepcopy(prev.init_matrice)
+            c.key = deepcopy(prev.key)
 
-            c.keystream = prev.keystream.copy()
-            c.enc_msg = prev.enc_msg.copy()
+            c.keystream = deepcopy(prev.keystream)
+            c.enc_msg = deepcopy(prev.enc_msg)
 
             c.next_step()
             previous_states.append(c)
 
             context = create_context(c)
             return JsonResponse(context)
+        elif command == "previous":
+            if len(previous_states) > 2:
+                previous_states.pop()
+
+                prev = previous_states[-1]
+        
+                context = create_context(prev)
+                return JsonResponse(context)
 
     else:
         c = Chacha("")
