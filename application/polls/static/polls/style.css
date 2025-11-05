@@ -1,122 +1,167 @@
-/* Style sombre global */
+/* ----------- BASE ----------- */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
-    margin: 40px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #0f0f0f;
+  color: #e0e0e0;
+  margin: 0;
+  padding: 40px;
 }
 
 .page-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background: #1e1e1e;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #1b1b1b;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7);
 }
 
-/* Titres */
+/* ----------- TITRES ----------- */
 h2, h3 {
-    color: #ffffff;
-    margin-bottom: 10px;
-    border-left: 4px solid #a6adb3;
-    padding-left: 10px;
+  color: #ffffff;
+  border-left: 4px solid #4dabf7;
+  padding-left: 10px;
+  margin-bottom: 12px;
 }
 
-/* Champ input */
+.subtitle {
+  color: #aaa;
+  margin-top: -8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+/* ----------- INPUT ----------- */
 input[type="text"] {
-    width: 100%;
-    padding: 10px 15px;
-    margin-top: 5px;
-    margin-bottom: 30px;
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 5px;
-    font-size: 1rem;
-    color: #f1f1f1;
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  background-color: #2a2a2a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #f1f1f1;
+  font-size: 1rem;
 }
 
-/* Tables */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 30px;
-    background: #2b2b2b;
-    border: 2px solid #444;
-    table-layout: fixed;
+button {
+  background-color: #333;
+  color: #f1f1f1;
+  padding: 10px 18px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-th {
-    background-color: #c4c6c7;
-    color: #000000;
-    padding: 10px;
-    text-align: left;
-    font-weight: bold;
+button:hover {
+  background-color: #4dabf7;
+  color: #000;
+  transform: scale(1.03);
 }
 
-td {
-    padding: 10px;
-    border: 1px solid #444;
-    color: #e0e0e0;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
+button:active {
+  transform: scale(0.97);
 }
 
-td {
-    word-break: break-all;
+/* ----------- TABLES ----------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #262626;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #444;
 }
 
-/* Conteneur flex pour la matrice */
-.containerCtrlMatrice {
-    display: flex;
-    flex-direction: row;
-    gap: 30px;
-    margin-bottom: 30px;
+.data-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #444;
+  font-family: monospace;
+  word-break: break-all;
+  color: #d0d0d0;
 }
 
-/* Responsive */
+/* ----------- MATRICE + QR ----------- */
+.matrix-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.matrix-container {
+  flex: 1 1 60%;
+}
+
+.matrix-table td {
+  background: #1e1e1e;
+}
+
+.matrix-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* ----------- PANNEAU QR ----------- */
+.qr-explanation {
+  flex: 1 1 35%;
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.qr-explanation h3 {
+  color: #66ccff;
+  border: none;
+  margin-top: 0;
+}
+
+.qr-explanation code {
+  color: #a0e7ff;
+}
+
+.qr-explanation .note {
+  font-style: italic;
+  color: #999;
+}
+
+/* ----------- EXPLICATION DYNAMIQUE ----------- */
+.explanation-box {
+  background: #252525;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 15px;
+  font-size: 0.95rem;
+  color: #f0f0f0;
+  margin-bottom: 25px;
+  line-height: 1.4em;
+}
+
+/* ----------- BOX MAC / RES ----------- */
+.key-box {
+  background: #202020;
+  border: 1px solid #555;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: monospace;
+  word-break: break-all;
+  margin-bottom: 25px;
+}
+
+/* ----------- RESPONSIVE ----------- */
 @media (max-width: 768px) {
-    .containerCtrlMatrice {
-        flex-direction: column;
-    }
-
-    input[type="text"] {
-        font-size: 0.9rem;
-    }
-}
-
-/* Liens et autres éléments interactifs (optionnel) */
-a, button {
-    color: #4dabf7;
-    text-decoration: none;
-}
-
-a:hover, button:hover {
-    text-decoration: underline;
-}
-
-button[type="submit"], #play, #stop {
-    background-color: #333; /* fond sombre */
-    color: #f1f1f1; /* texte clair */
-    padding: 10px 20px;
-    border: 1px solid #555; /* bord discret */
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-/* Effet au survol */
-button[type="submit"]:hover, #play:hover , #stop:hover{
-    background-color: #4dabf7; /* bleu cohérent avec le style des liens */
-    color: #000;
-    text-decoration: none; /* override du underline global */
-    transform: scale(1.03);
-}
-
-/* Effet lorsqu'on clique */
-button[type="submit"]:active, #play:active, #stop:active {
-    transform: scale(0.98);
-    background-color: #339af0;
+  .matrix-flex {
+    flex-direction: column;
+  }
+  button {
+    flex: 1 1 auto;
+  }
 }

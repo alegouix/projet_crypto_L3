@@ -1,170 +1,132 @@
 {% load static %}
 <head>
-    <meta charset="utf-8"/>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="{% static 'polls/style.css' %}">
 </head>
 
-<link rel="stylesheet" href="{% static 'polls/style.css' %}">
-
+<body>
 <div class="page-container">
+  <header>
+    <h2>Démo ChaCha20–Poly1305</h2>
+    <p class="subtitle">Visualisation pas à pas du chiffrement et du calcul du MAC</p>
+  </header>
 
-    <h2>Message</h2>
-    <form id="form" method="POST">
-        {% csrf_token %}
-        <label for="message">Entrez un message :</label>
-        <input type="text" id="message" name="message" placeholder="Tapez ici..." required />
-        <button type="submit">Envoyer</button>
+  <section class="input-section">
+    <h3>Message à chiffrer</h3>
+    <form id="form" method="POST" class="form-message">
+      {% csrf_token %}
+      <input type="text" id="message" name="message" placeholder="Tapez votre message ici..." required />
+      <button type="submit">Envoyer</button>
     </form>
+  </section>
 
-    <h3>Message découpé en hexadécimal</h3>
-    <table>
-        <tbody>
-           {% with parties_count=parties|length %}
-                <tr>
-                    {% for part in parties %}
-                        <td>{{ part }}</td>
-                    {% endfor %}
-
-                    {% if parties_count < 5 %}
-                        {% for _ in "12345"|slice:":{{ 5|add:-parties_count }}" %}
-                            <td></td>
-                        {% endfor %}
-                    {% endif %}
-                </tr>
-            {% endwith %}
-        </tbody>
+  <section>
+    <h3>Message découpé (hexadécimal)</h3>
+    <table class="data-table">
+      <tbody>
+        {% with parties_count=parties|length %}
+          <tr>
+            {% for part in parties %}
+              <td>{{ part }}</td>
+            {% endfor %}
+            {% if parties_count < 5 %}
+              {% for _ in "12345"|slice:":{{ 5|add:-parties_count }}" %}
+                <td></td>
+              {% endfor %}
+            {% endif %}
+          </tr>
+        {% endwith %}
+      </tbody>
     </table>
+  </section>
 
+  <section>
+    <h3>Clé utilisée</h3>
+    <div class="key-box" id="key_str">{{ key_str }}</div>
+  </section>
 
-    <h3>Clé</h3>
-    <table>
-        <tbody>
-            <tr>
-                <td id="key_str">{{ key_str }}</td>
-            </tr>
-        </tbody>
-    </table>
-    
-    
+  <section class="explanation-section">
     <h3>Explications sur l’étape actuelle</h3>
-    <div id="explanation" style="border:1px solid #888; padding:1em; border-radius:10px; background:#1e1e1e; color:white;">
-        En attente de la première étape...
+    <div id="explanation" class="explanation-box">
+      En attente de la première étape...
     </div>
-    
-    <h3>Matrice</h3>
-    <div class="containerCtrlMatrice">
-        <div class="qr-explanation"
-            style="position:absolute; right:80%; top:50%; width:15%; padding:1em; border-radius:10px; background:#252525; color:white; box-shadow:0 0 10px rgba(0,0,0,0.5);">
-            <h3 style="color:#66ccff;">Quarter Round (QR) – principe</h3>
-            <p>
-                Un *Quarter Round* opère sur 4 mots de 32 bits <b>(a, b, c, d)</b>.
-                Il mélange ces mots en utilisant trois types d’opérations :
-            </p>
-            <ul>
-                <li><b>Addition mod 2³² :</b> <code>a = (a + b) mod 2³²</code></li>
-                <li><b>XOR :</b> <code>d = d XOR a</code></li>
-                <li><b>Rotation gauche :</b> <code>d = ROTL(d, n)</code> (rotation de n bits)</li>
-            </ul>
-            <p>Ces opérations sont répétées selon la séquence :</p>
-            <ol>
-                <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
-                <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
-                <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
-                <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
-            </ol>
-            <p style="font-style:italic; color:#aaa;">
-                Ce processus assure une diffusion forte : chaque bit de la clé, du compteur ou du nonce influence rapidement
-                tout le bloc.
-            </p>
+  </section>
+
+  <section class="matrix-section">
+    <div class="matrix-flex">
+      <div class="matrix-container">
+        <h3>Matrice ChaCha20</h3>
+        <table class="data-table matrix-table">
+          <tbody>
+            <tr>
+              <td id="c1">{{ c1 }}</td><td id="c2">{{ c2 }}</td><td id="c3">{{ c3 }}</td><td id="c4">{{ c4 }}</td>
+            </tr>
+            <tr>
+              <td id="k1">{{ k1 }}</td><td id="k2">{{ k2 }}</td><td id="k3">{{ k3 }}</td><td id="k4">{{ k4 }}</td>
+            </tr>
+            <tr>
+              <td id="k5">{{ k5 }}</td><td id="k6">{{ k6 }}</td><td id="k7">{{ k7 }}</td><td id="k8">{{ k8 }}</td>
+            </tr>
+            <tr>
+              <td id="ct">{{ ct }}</td><td id="n1">{{ n1 }}</td><td id="n2">{{ n2 }}</td><td id="n3">{{ n3 }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="matrix-controls">
+          <form id="form_control_previous" method="POST">{% csrf_token %}
+            <button id="buttonPrevious" type="submit">⟸ Étape précédente</button>
+          </form>
+          <form id="form_control_next" method="POST">{% csrf_token %}
+            <button id="buttonNext" type="submit">Prochaine étape ⟹</button>
+          </form>
+          <form id="form_control_reset" method="POST">{% csrf_token %}
+            <button type="submit">Réinitialiser</button>
+          </form>
+          <button id="play">▶ Lecture auto</button>
+          <button id="stop">■ Stop</button>
         </div>
-        <table>
-            <tbody>
-                <tr>
-                    <td id="c1">{{ c1 }}</td>
-                    <td id="c2">{{ c2 }}</td>
-                    <td id="c3">{{ c3 }}</td>
-                    <td id="c4">{{ c4 }}</td>
-                </tr>
-                <tr>
-                    <td id="k1">{{ k1 }}</td>
-                    <td id="k2">{{ k2 }}</td>
-                    <td id="k3">{{ k3 }}</td>
-                    <td id="k4">{{ k4 }}</td>
-                </tr>
-                <tr>
-                    <td id="k5">{{ k5 }}</td>
-                    <td id="k6">{{ k6 }}</td>
-                    <td id="k7">{{ k7 }}</td>
-                    <td id="k8">{{ k8 }}</td>
-                </tr>
-                <tr>
-                    <td id="ct">{{ ct }}</td>
-                    <td id="n1">{{ n1 }}</td>
-                    <td id="n2">{{ n2 }}</td>
-                    <td id="n3">{{ n3 }}</td>
-                </tr>
-            </tbody>
-        </table>
-    
-        <table>
-            <tbody>
-                <tr>
-                    <td>
-                        <form id="form_control_previous" method="POST">
-                            {% csrf_token %}
-                            <button id="buttonPrevious" type="submit">Étape précédente</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form id="form_control_next" method="POST">
-                            {% csrf_token %}
-                            <button id="buttonNext" type="submit">Prochaine Étape</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form id="form_control_reset" method="POST">
-                            {% csrf_token %}
-                            <button type="submit">Réinitialiser</button>
-                        </form>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <button id="play">||></button>
-                    </td>
-                    <td>
-                        <button id="stop">Stop</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+      </div>
+
+      <aside class="qr-explanation">
+        <h3>Quarter Round (QR) – principe</h3>
+        <p>
+          Un <b>Quarter Round</b> agit sur 4 mots de 32 bits (<b>a, b, c, d</b>)
+          en combinant :
+        </p>
+        <ul>
+          <li><b>Addition mod 2³²</b> : <code>a = (a + b) mod 2³²</code></li>
+          <li><b>XOR</b> : <code>d = d XOR a</code></li>
+          <li><b>Rotation gauche</b> : <code>d = ROTL(d, n)</code></li>
+        </ul>
+        <p>La séquence complète :</p>
+        <ol>
+          <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
+          <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
+          <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
+          <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
+        </ol>
+        <p class="note">
+          → Chaque bit de la clé, du compteur ou du nonce influence rapidement tout le bloc.
+        </p>
+      </aside>
     </div>
+  </section>
 
-    <h3>MAC Généré par Poly1305</h3>
-    <table>
-        <tbody>
-            <tr>
-                <td style="word-break: break-all" id="mac">{{ mac }}</td>
-            </tr>
-        </tbody>
-    </table>
+  <section>
+    <h3>MAC généré (Poly1305)</h3>
+    <div class="key-box" id="mac">{{ mac }}</div>
+  </section>
 
-    <h3>Résultat</h3>
-    <table>
-        <tbody>
-            <tr>
-                <td style="word-break: break-all" id="res">{{ res }}</td>
-            </tr>
-        </tbody>
-    </table>
+  <section>
+    <h3>Résultat chiffré</h3>
+    <div class="key-box" id="res">{{ res }}</div>
+  </section>
 
-    <h3>Mesage décrypté</h3>
-    <table>
-        <tbody>
-            <tr>
-                <td style="word-break: break-all" id="decrypt">{{ decrypt }}</td>
-            </tr>
-        </tbody>
-    </table>
+  <section>
+    <h3>Message déchiffré</h3>
+    <div class="key-box" id="decrypt">{{ decrypt }}</div>
+  </section>
 </div>
 
 <script>
