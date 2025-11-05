@@ -157,7 +157,7 @@ class Chacha:
                 self.QR(c3, k4, k5, n1)
                 self.qr += 1
             elif self.qr == 7:
-                self.QR(c4, k1, k5, n2)
+                self.QR(c4, k1, k6, n2)
                 self.qr += 1
 
             elif self.qr == 8:

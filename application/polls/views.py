@@ -47,10 +47,6 @@ def create_context(chacha: Chacha):
             "decrypt": decrypt,
         }
 
-def convert_int_array_to_cuint32(array) :
-    return [c_uint32(v) for v in array]
-
-
 @csrf_exempt
 def index(request):
     global previous_states
@@ -97,7 +93,6 @@ def index(request):
 
             c.next_step()
             previous_states.append(c)
-            print(previous_states)
 
             context = create_context(c)
             return JsonResponse(context)
