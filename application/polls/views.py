@@ -95,6 +95,7 @@ def index(request):
 
             context = create_context(c)
             return JsonResponse(context)
+
         elif command == "previous":
             if len(previous_states) > 2:
                 previous_states.pop()
@@ -103,6 +104,10 @@ def index(request):
         
                 context = create_context(prev)
                 return JsonResponse(context)
+
+        elif command == "reset":
+            previous_states = [previous_states[0]]
+            return JsonResponse(create_context(previous_states[0]))
 
     else:
         c = Chacha("")

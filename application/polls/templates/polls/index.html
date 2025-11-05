@@ -91,6 +91,12 @@
                             <button type="submit">Prochaine Étape</button>
                         </form>
                     </td>
+                    <td>
+                        <form id="form_control_reset" method="POST">
+                            {% csrf_token %}
+                            <button type="submit">Réinitialiser</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -227,5 +233,33 @@ document.getElementById("form_control_previous").addEventListener("submit", func
     });
 });
 
+document.getElementById("form_control_reset").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch("", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ "command" : "reset" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        for (const [key, value] of Object.entries(data)) {
+            dom = document.getElementById(key)
+            if(dom != null) {
+                dom.innerHTML = value
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Erreur:", error);
+    });
+});
 
 </script>
