@@ -20,6 +20,10 @@ def create_context(chacha: Chacha):
     for v in chacha.key:
         key_str += f"{v.value:08x}"
 
+    decrypt = ""
+    if chacha.done:
+        decrypt = chacha.decrypt()
+    
     return {
             "key_str": key_str,
             "c1": f"{chacha.matrice[0].value:08x}",
@@ -27,7 +31,7 @@ def create_context(chacha: Chacha):
             "c3": f"{chacha.matrice[2].value:08x}",
             "c4": f"{chacha.matrice[3].value:08x}",
             "k1": f"{chacha.matrice[4].value:08x}",
-            "k2": f"{chacha.matrice[4].value:08x}",
+            "k2": f"{chacha.matrice[5].value:08x}",
             "k3": f"{chacha.matrice[6].value:08x}",
             "k4": f"{chacha.matrice[7].value:08x}",
             "k5": f"{chacha.matrice[8].value:08x}",
@@ -40,6 +44,7 @@ def create_context(chacha: Chacha):
             "n3": f"{chacha.matrice[15].value:08x}",
             "mac": chacha.MAC.hex(),
             "res": res,
+            "decrypt": decrypt,
         }
 
 def convert_int_array_to_cuint32(array) :

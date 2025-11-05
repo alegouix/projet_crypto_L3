@@ -138,29 +138,29 @@ class Chacha:
             if self.qr == 0:
                 self.QR(c1, k1, k5, ct)
                 self.qr += 1
-            if self.qr == 1:
+            elif self.qr == 1:
                 self.QR(c2, k2, k6, n1)
                 self.qr += 1
-            if self.qr == 2:
+            elif self.qr == 2:
                 self.QR(c3, k3, k7, n2)
                 self.qr += 1
-            if self.qr == 3:
+            elif self.qr == 3:
                 self.QR(c4, k4, k8, n3)
                 self.qr += 1
-            if self.qr == 4:
+            elif self.qr == 4:
                 self.QR(c1, k2, k7, n3)
                 self.qr += 1
-            if self.qr == 5:
+            elif self.qr == 5:
                 self.QR(c2, k3, k8, ct)
                 self.qr += 1
-            if self.qr == 6:
+            elif self.qr == 6:
                 self.QR(c3, k4, k5, n1)
                 self.qr += 1
-            if self.qr == 7:
+            elif self.qr == 7:
                 self.QR(c4, k1, k5, n2)
                 self.qr += 1
 
-            if self.qr == 8:
+            elif self.qr == 8:
                 self.qr = 0
                 self.tour += 1
 
