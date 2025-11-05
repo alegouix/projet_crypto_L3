@@ -142,6 +142,21 @@
 
 var run = true;
 
+
+function changeText(data) {
+    for (const [key, value] of Object.entries(data)) {
+        dom = document.getElementById(key)
+        if(dom != null) {
+            if(dom.innerHTML != value && !["res", "decrypt", "mac", "key_str"].includes(key) ) {
+                dom.style.color = '#ff0066';
+            } else {
+                dom.style.color = '#ffffff'
+            }
+            dom.innerHTML = value
+        }
+    }
+}
+
 document.getElementById("form").addEventListener("submit", function(event) {
     event.preventDefault();
 
@@ -174,12 +189,7 @@ document.getElementById("form").addEventListener("submit", function(event) {
 
         tbody.appendChild(row);
 
-        for (const [key, value] of Object.entries(data)) {
-            dom = document.getElementById(key)
-            if(dom != null) {
-                dom.innerHTML = value
-            }
-        }
+        changeText(data)
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -203,12 +213,7 @@ document.getElementById("form_control_next").addEventListener("submit", function
     })
     .then(response => response.json())
     .then(data => {
-        for (const [key, value] of Object.entries(data)) {
-            dom = document.getElementById(key)
-            if(dom != null) {
-                dom.innerHTML = value
-            }
-        }
+        changeText(data)
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -231,13 +236,8 @@ document.getElementById("form_control_previous").addEventListener("submit", func
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
-        for (const [key, value] of Object.entries(data)) {
-            dom = document.getElementById(key)
-            if(dom != null) {
-                dom.innerHTML = value
-            }
-        }
+        //console.log(data);
+        changeText(data)
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -261,12 +261,7 @@ document.getElementById("form_control_reset").addEventListener("submit", functio
     .then(response => response.json())
     .then(data => {
         console.log(data);
-        for (const [key, value] of Object.entries(data)) {
-            dom = document.getElementById(key)
-            if(dom != null) {
-                dom.innerHTML = value
-            }
-        }
+        changeText(data)
     })
     .catch(error => {
         console.error("Erreur:", error);
