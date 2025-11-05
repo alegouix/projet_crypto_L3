@@ -3,10 +3,11 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import SafeString
 
-import json
 from ctypes import c_uint32
 
 from .Chacha import Chacha
+
+previous_states = []
 
 def create_context(chacha: Chacha):
     res = ""
@@ -20,7 +21,6 @@ def create_context(chacha: Chacha):
         key_str += f"{v.value:08x}"
 
     return {
-            "chacha": SafeString(chacha.toJSON()),
             "key_str": key_str,
             "c1": f"{chacha.matrice[0].value:08x}",
             "c2": f"{chacha.matrice[1].value:08x}",
@@ -48,10 +48,13 @@ def convert_int_array_to_cuint32(array) :
 
 @csrf_exempt
 def index(request):
+    global previous_states
+
     context = {}
     
     if request.method == "POST" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         message = request.POST.get("message", "")
+        command = request.POST.get("command", "")
 
         if message != "":
             message_hexa = message.encode("utf-8").hex()
@@ -63,31 +66,33 @@ def index(request):
             context = create_context(c)
             context["parties"] = parties
 
+            previous_states = [c]
+
             return JsonResponse(context)
 
-        else:
-            obj = json.loads(request.POST.get("chacha"))
-            print(obj)
+        elif command == "next":
+            prev = previous_states[-1]
 
-            c = Chacha(obj.get("msg"))
+            c = Chacha(prev.msg.decode(encoding="ascii"))
 
-            c.MAC = obj.get("MAC").encode()
-            c.compteur = obj.get("compteur")
-            c.done = obj.get("done")
-            c.msg_index = obj.get("msg_index")
-            c.qr = obj.get("qr")
-            c.tour = obj.get("tour")
+            c.MAC = prev.MAC
+            c.compteur = prev.compteur
+            c.done = prev.done
+            c.msg_index = prev.msg_index
+            c.qr = prev.qr
+            c.tour = prev.tour
 
-            c.msg_cint = convert_int_array_to_cuint32(obj.get("msg_cint"))
-            c.matrice = convert_int_array_to_cuint32(obj.get("matrice"))
-            c.init_matrice = convert_int_array_to_cuint32(obj.get("init_matrice"))
-            c.key = convert_int_array_to_cuint32(obj.get("key"))
+            c.msg_cint = prev.msg_cint.copy()
+            c.matrice = prev.matrice.copy()
+            c.init_matrice = prev.init_matrice.copy()
+            c.key = prev.key.copy()
 
-            c.keystream = obj.get("done")
-            c.enc_msg = obj.get("enc_msg")
+            c.keystream = prev.keystream.copy()
+            c.enc_msg = prev.enc_msg.copy()
 
             c.next_step()
-            print(c.qr, c.tour)
+            previous_states.append(c)
+            print(previous_states)
 
             context = create_context(c)
             return JsonResponse(context)

@@ -168,7 +168,7 @@ document.getElementById("form_control").addEventListener("submit", function(even
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ "chacha" : JSON.stringify( {{ chacha }} ) })
+        body: new URLSearchParams({ "command" : "next" })
     })
     .then(response => response.json())
     .then(data => {
