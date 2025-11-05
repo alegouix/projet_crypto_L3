@@ -96,7 +96,7 @@ a:hover, button:hover {
     text-decoration: underline;
 }
 
-button[type="submit"] {
+button[type="submit"], #play, #stop {
     background-color: #333; /* fond sombre */
     color: #f1f1f1; /* texte clair */
     padding: 10px 20px;
@@ -108,7 +108,7 @@ button[type="submit"] {
 }
 
 /* Effet au survol */
-button[type="submit"]:hover {
+button[type="submit"]:hover, #play:hover , #stop:hover{
     background-color: #4dabf7; /* bleu cohérent avec le style des liens */
     color: #000;
     text-decoration: none; /* override du underline global */
@@ -116,7 +116,7 @@ button[type="submit"]:hover {
 }
 
 /* Effet lorsqu'on clique */
-button[type="submit"]:active {
+button[type="submit"]:active, #play:active, #stop:active {
     transform: scale(0.98);
     background-color: #339af0;
 }

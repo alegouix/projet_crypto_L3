@@ -82,14 +82,22 @@
                     <td>
                         <form id="form_control_previous" method="POST">
                             {% csrf_token %}
-                            <button type="submit">Étape précédente</button>
+                            <button id="buttonPrevious" type="submit">Étape précédente</button>
                         </form>
                     </td>
                     <td>
                         <form id="form_control_next" method="POST">
                             {% csrf_token %}
-                            <button type="submit">Prochaine Étape</button>
+                            <button id="buttonNext" type="submit">Prochaine Étape</button>
                         </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="play">||></button>
+                    </td>
+                    <td>
+                        <button id="stop">Stop</button>
                     </td>
                 </tr>
             </tbody>
@@ -125,6 +133,9 @@
 </div>
 
 <script>
+
+var run = true;
+
 document.getElementById("form").addEventListener("submit", function(event) {
     event.preventDefault();
 
@@ -227,5 +238,21 @@ document.getElementById("form_control_previous").addEventListener("submit", func
     });
 });
 
+
+document.getElementById("play").addEventListener("click", () => {
+    run = true;
+
+    const intervalId = setInterval(() => {
+        if (run) {
+            document.getElementById('buttonNext').click(); 
+        } else {
+            clearInterval(intervalId); 
+        }
+    }, 200);
+});
+
+document.getElementById("stop").addEventListener("click", () => {
+    run = false;
+});
 
 </script>
