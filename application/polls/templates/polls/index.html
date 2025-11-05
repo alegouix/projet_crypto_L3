@@ -173,6 +173,12 @@ document.getElementById("form_control").addEventListener("submit", function(even
     .then(response => response.json())
     .then(data => {
         console.log(data);
+        for (const [key, value] of Object.entries(data)) {
+            dom = document.getElementById(key)
+            if(dom != null) {
+                dom.innerHTML = value
+            }
+        }
     })
     .catch(error => {
         console.error("Erreur:", error);
