@@ -1,385 +1,455 @@
 {% load static %}
+
 <head>
-  <meta charset="utf-8"/>
-  <link rel="stylesheet" href="{% static 'polls/style.css' %}">
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="{% static 'polls/style.css' %}" />
 </head>
 
 <body>
-<div class="page-container">
+  <div class="page-container">
+    <!-- === En-tête === -->
+    <header>
+      <h2>Démo ChaCha20–Poly1305</h2>
+      <p class="subtitle">
+        Visualisation pas à pas du chiffrement et du calcul d’authentification
+      </p>
+    </header>
 
-  <!-- === En-tête === -->
-  <header>
-    <h2>Démo ChaCha20–Poly1305</h2>
-    <p class="subtitle">Visualisation pas à pas du chiffrement et du calcul d’authentification</p>
-  </header>
-
-  <!-- === Résumé général === -->
-  <section class="summary-section">
-    <h3>Résumé du fonctionnement</h3>
-    <div class="summary-box">
-      <ol>
-        <li><b>ChaCha20</b> génère un <i>keystream</i> de 512 bits à partir de :
-          <ul>
-            <li>une clé de 256 bits,</li>
-            <li>un compteur de bloc (32 bits),</li>
-            <li>et un nonce de 96 bits.</li>
-          </ul>
-        </li>
-        <li>Chaque bloc de message est <b>chiffré par XOR</b> avec le keystream.</li>
-        <li><b>Poly1305</b> calcule ensuite un <b>MAC</b> (Message Authentication Code)
-          pour vérifier l’intégrité du message chiffré.</li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- === Message === -->
-  <section class="input-section">
-    <h3>Message à chiffrer</h3>
-    <form id="form" method="POST" class="form-message">
-      {% csrf_token %}
-      <input type="text" id="message" name="message" placeholder="Tapez votre message ici..." required />
-      <button type="submit">Envoyer</button>
-    </form>
-  </section>
-
-  <section>
-    <h3>Message découpé (hexadécimal)</h3>
-    <table class="data-table">
-      <tbody>
-        {% with parties_count=parties|length %}
-          <tr>
-            {% for part in parties %}
-              <td>{{ part }}</td>
-            {% endfor %}
-          </tr>
-        {% endwith %}
-      </tbody>
-    </table>
-  </section>
-
-  <!-- === Clé et progression === -->
-  <section>
-    <h3>Clé utilisée (256 bits)</h3>
-    <div class="key-box" id="key_str">{{ key_str }}</div>
-
-    <h3>Progression des tours</h3>
-    <div class="tour-progress">
-      {% for i in "12345678910" %}
-        <span class="dot" id="dot{{ forloop.counter }}"></span>
-      {% endfor %}
-    </div>
-  </section>
-
-  <!-- === Explication dynamique === -->
-  <section class="explanation-section">
-    <h3>Explication de l’étape actuelle</h3>
-    <div id="explanation" class="explanation-box">
-      En attente de la première étape...
-    </div>
-  </section>
-
-  <!-- === Matrice et QR === -->
-    <section class="matrix-section">
-        <div class="matrix-flex">
-            <div class="matrix-container">
-                <h3>Matrice ChaCha20</h3>
-
-                <div class="nonce-info">
-                    <p><b>ct</b> : compteur (incrémenté chaque bloc)
-                        &nbsp;|&nbsp; <b>n1, n2, n3</b> : nonce (unique par message)</p>
-                </div>
-
-                <table class="data-table matrix-table">
-                    <tbody>
-                        <tr>
-                            <td id="c1">{{ c1 }}</td>
-                            <td id="c2">{{ c2 }}</td>
-                            <td id="c3">{{ c3 }}</td>
-                            <td id="c4">{{ c4 }}</td>
-                        </tr>
-                        <tr>
-                            <td id="k1">{{ k1 }}</td>
-                            <td id="k2">{{ k2 }}</td>
-                            <td id="k3">{{ k3 }}</td>
-                            <td id="k4">{{ k4 }}</td>
-                        </tr>
-                        <tr>
-                            <td id="k5">{{ k5 }}</td>
-                            <td id="k6">{{ k6 }}</td>
-                            <td id="k7">{{ k7 }}</td>
-                            <td id="k8">{{ k8 }}</td>
-                        </tr>
-                        <tr>
-                            <td id="ct">{{ ct }}</td>
-                            <td id="n1">{{ n1 }}</td>
-                            <td id="n2">{{ n2 }}</td>
-                            <td id="n3">{{ n3 }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="matrix-controls">
-                    <form id="form_control_previous" method="POST">{% csrf_token %}
-                        <button id="buttonPrevious" type="submit">⟸ Étape précédente</button>
-                    </form>
-                    <form id="form_control_next" method="POST">{% csrf_token %}
-                        <button id="buttonNext" type="submit">Prochaine étape ⟹</button>
-                    </form>
-                    <form id="form_control_reset" method="POST">{% csrf_token %}
-                        <button type="submit">Réinitialiser</button>
-                    </form>
-                    <button id="play">▶ Lecture auto</button>
-                    <button id="stop">■ Stop</button>
-                </div>
-            </div>
-
-            <aside class="qr-explanation">
-                <h3>Quarter Round (QR)</h3>
-                <p>Un <b>Quarter Round</b> agit sur 4 mots de 32 bits (<b>a, b, c, d</b>) :</p>
-                <ul>
-                    <li><b>Addition mod 2³²</b> : <code>a = (a + b)</code></li>
-                    <li><b>XOR</b> : <code>d = d XOR a</code></li>
-                    <li><b>Rotation gauche</b> : <code>d = ROTL(d, n)</code></li>
-                </ul>
-                <p>Séquence complète :</p>
-                <ol>
-                    <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
-                    <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
-                    <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
-                    <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
-                </ol>
-                <p class="note">→ Chaque bit se propage dans tout le bloc après quelques tours.</p>
-            </aside>
-        </div>
+    <!-- === Résumé général === -->
+    <section class="summary-section">
+      <h3>Résumé du fonctionnement</h3>
+      <div class="summary-box">
+        <ol>
+          <li>
+            <b>ChaCha20</b> génère un <i>keystream</i> de 512 bits à partir de :
+            <ul>
+              <li>une clé de 256 bits,</li>
+              <li>un compteur de bloc (32 bits),</li>
+              <li>et un nonce de 96 bits.</li>
+            </ul>
+          </li>
+          <li>
+            Chaque bloc de message est <b>chiffré par XOR</b> avec le keystream.
+          </li>
+          <li>
+            <b>Poly1305</b> calcule ensuite un <b>MAC</b> (Message
+            Authentication Code) pour vérifier l’intégrité du message chiffré.
+          </li>
+        </ol>
+      </div>
     </section>
 
-  <!-- === Keystream et XOR === -->
-  <section>
-    <h3>Keystream et opération XOR</h3>
-    <div class="xor-box">
-      <p><b>Keystream :</b> <span id="keystream">—</span></p>
-      <p><b>Message (hex) :</b> <span id="msghex">—</span></p>
-      <p><b>Résultat XOR :</b> <span id="xorres">—</span></p>
-    </div>
-  </section>
+    <!-- === Message === -->
+    <section class="input-section">
+      <h3>Message à chiffrer</h3>
+      <form id="form" method="POST" class="form-message">
+        {% csrf_token %}
+        <input type="text" id="message" name="message" placeholder="Tapez votre message ici..." required />
+        <button type="submit">Envoyer</button>
+      </form>
+    </section>
 
-  <!-- === MAC Poly1305 === -->
-  <section>
-    <h3>Clé dérivée pour Poly1305</h3>
-    <div class="key-box" id="mackey">—</div>
+    <section>
+      <h3>Message découpé (hexadécimal)</h3>
+      <table class="data-table">
+        <tbody>
+          {% with parties_count=parties|length %}
+          <tr>
+            {% for part in parties %}
+            <td>{{ part }}</td>
+            {% endfor %}
+          </tr>
+          {% endwith %}
+        </tbody>
+      </table>
+    </section>
 
-    <h3>MAC généré (Poly1305)</h3>
-    <div class="key-box" id="mac">{{ mac }}</div>
-  </section>
+    <!-- === Clé et progression === -->
+    <section>
+      <h3>Clé utilisée (256 bits)</h3>
+      <div class="key-box" id="key_str">{{ key_str }}</div>
 
-  <!-- === Résultats === -->
-  <section>
-    <h3>Résultat chiffré</h3>
-    <div class="key-box" id="res">{{ res }}</div>
+      <h3>Progression des tours</h3>
+      <div class="tour-progress">
+        {% for i in "12345678910" %}
+        <span class="dot" id="dot{{ forloop.counter }}"></span>
+        {% endfor %}
+      </div>
+    </section>
 
-    <h3>Message déchiffré</h3>
-    <div class="key-box" id="decrypt">{{ decrypt }}</div>
-  </section>
-</div>
+    <!-- === Explication dynamique === -->
+    <section class="explanation-section">
+      <h3>Explication de l’étape actuelle</h3>
+      <div id="explanation" class="explanation-box">
+        En attente de la première étape...
+      </div>
+    </section>
 
-<script>
+    <!-- === Matrice et QR === -->
+    <section class="matrix-section">
+      <div class="matrix-flex">
+        <div class="matrix-container">
+          <h3>Matrice ChaCha20</h3>
 
-var run = true;
+          <div class="nonce-info">
+            <p>
+              <b>ct</b> : compteur (incrémenté chaque bloc) &nbsp;|&nbsp;
+              <b>n1, n2, n3</b> : nonce (unique par message)
+            </p>
+          </div>
 
+          <table class="data-table matrix-table">
+            <tbody>
+              <tr>
+                <td id="c1">{{ c1 }}</td>
+                <td id="c2">{{ c2 }}</td>
+                <td id="c3">{{ c3 }}</td>
+                <td id="c4">{{ c4 }}</td>
+              </tr>
+              <tr>
+                <td id="k1">{{ k1 }}</td>
+                <td id="k2">{{ k2 }}</td>
+                <td id="k3">{{ k3 }}</td>
+                <td id="k4">{{ k4 }}</td>
+              </tr>
+              <tr>
+                <td id="k5">{{ k5 }}</td>
+                <td id="k6">{{ k6 }}</td>
+                <td id="k7">{{ k7 }}</td>
+                <td id="k8">{{ k8 }}</td>
+              </tr>
+              <tr>
+                <td id="ct">{{ ct }}</td>
+                <td id="n1">{{ n1 }}</td>
+                <td id="n2">{{ n2 }}</td>
+                <td id="n3">{{ n3 }}</td>
+              </tr>
+            </tbody>
+          </table>
 
-function changeText(data) {
-    for (const [key, value] of Object.entries(data)) {
-        dom = document.getElementById(key)
-        if(dom != null) {
-            if(dom.innerHTML != value && !["res", "decrypt", "mac", "key_str", "msghex", "keystream", "xorres", "mackey"].includes(key) ) {
-                dom.style.color = '#ff0066';
-            } else {
-                dom.style.color = '#ffffff'
-            }
-            dom.innerHTML = value
+          <div class="matrix-controls">
+            <form id="form_control_previous" method="POST">
+              {% csrf_token %}
+              <button id="buttonPrevious" type="submit">
+                ⟸ Étape précédente
+              </button>
+            </form>
+            <form id="form_control_next" method="POST">
+              {% csrf_token %}
+              <button id="buttonNext" type="submit">Prochaine étape ⟹</button>
+            </form>
+            <form id="form_control_reset" method="POST">
+              {% csrf_token %}
+              <button type="submit">Réinitialiser</button>
+            </form>
+            <button id="play">▶ Lecture auto</button>
+            <button id="stop">■ Stop</button>
+          </div>
+        </div>
+
+        <aside class="qr-explanation">
+          <h3>Quarter Round (QR)</h3>
+          <p>
+            Un <b>Quarter Round</b> agit sur 4 mots de 32 bits (<b>a, b, c, d</b>) :
+          </p>
+          <ul>
+            <li><b>Addition mod 2³²</b> : <code>a = (a + b)</code></li>
+            <li><b>XOR</b> : <code>d = d XOR a</code></li>
+            <li><b>Rotation gauche</b> : <code>d = ROTL(d, n)</code></li>
+          </ul>
+          <p>Séquence complète :</p>
+          <ol>
+            <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
+            <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
+            <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
+            <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
+          </ol>
+          <p class="note">
+            → Chaque bit se propage dans tout le bloc après quelques tours.
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- === Keystream et XOR === -->
+    <section>
+      <h3>Keystream et opération XOR</h3>
+      <div class="xor-box">
+        <p><b>Keystream :</b> <span id="keystream">—</span></p>
+        <p><b>Message (hex) :</b> <span id="msghex">—</span></p>
+        <p><b>Résultat XOR :</b> <span id="xorres">—</span></p>
+      </div>
+    </section>
+
+    <section>
+      <h3>Étapes de calcul de Poly1305</h3>
+      <div class="explanation-box">
+        <ol>
+          <li>
+            <strong>Génération de la clé dérivée</strong> — À partir de la clé
+            principale et du nonce, on dérive une clé de 256 bits, séparée en
+            deux parties : <em>r</em> (clé de chiffrement) et <em>s</em> (clé
+            d’ajustement).
+          </li>
+          <li>
+            <strong>Préparation du message</strong> — Le message est découpé en
+            blocs de 16 octets, qu'on interprète en entier de 17 octets en rajoutant un 1 qui servira de coefficiant polynomial.
+          </li>
+          <li>
+            <strong>Evaluation</strong> — On évalue le polynôme obtenu au point r : chaque coefficient multiplié par r à la puissance correspondante, puis on fait la réduction modulo 2¹³⁰ − 5 à chaque étape.
+          </li>
+          <li>
+            <strong>Réduction</strong> — Après avoir évaluer tous les blocs, on réduit le résultat modulo 2¹²⁸ et on encode le tout en little-endian.
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- === MAC Poly1305 === -->
+    <section>
+      <h3>Clé dérivée pour Poly1305</h3>
+      <div class="key-box" id="mackey">—</div>
+
+      <h3>MAC généré (Poly1305)</h3>
+      <div class="key-box" id="mac">{{ mac }}</div>
+    </section>
+
+    <!-- === Résultats === -->
+    <section>
+      <h3>Résultat chiffré</h3>
+      <div class="key-box" id="res">{{ res }}</div>
+
+      <h3>Message déchiffré</h3>
+      <div class="key-box" id="decrypt">{{ decrypt }}</div>
+    </section>
+  </div>
+
+  <script>
+    var run = true;
+
+    function changeText(data) {
+      for (const [key, value] of Object.entries(data)) {
+        dom = document.getElementById(key);
+        if (dom != null) {
+          if (
+            dom.innerHTML != value &&
+            ![
+              "res",
+              "decrypt",
+              "mac",
+              "key_str",
+              "msghex",
+              "keystream",
+              "xorres",
+              "mackey",
+            ].includes(key)
+          ) {
+            dom.style.color = "#ff0066";
+          } else {
+            dom.style.color = "#ffffff";
+          }
+          dom.innerHTML = value;
         }
+      }
     }
-}
 
-function highlightTour(tour) {
-  for (let i = 1; i <= 10; i++) {
-    document.getElementById(`dot${i}`).style.background = i <= tour ? "#4dabf7" : "#444";
-  }
-}
+    function highlightTour(tour) {
+      for (let i = 1; i <= 10; i++) {
+        document.getElementById(`dot${i}`).style.background =
+          i <= tour ? "#4dabf7" : "#444";
+      }
+    }
 
-document.getElementById("form").addEventListener("submit", function(event) {
-    event.preventDefault();
+    document
+      .getElementById("form")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
 
-    const message = document.getElementById("message").value;
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const message = document.getElementById("message").value;
+        const csrfToken = document.querySelector(
+          "[name=csrfmiddlewaretoken]"
+        ).value;
 
-    fetch("", {
-        method: "POST",
-        headers: {
+        fetch("", {
+          method: "POST",
+          headers: {
             "X-CSRFToken": csrfToken,
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ message })
-    })
-    .then(response => response.json())
-    .then(data => {
-        const parts = data.parties;
-        const tbody = document.querySelector("tbody");
+          },
+          body: new URLSearchParams({ message }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const parts = data.parties;
+            const tbody = document.querySelector("tbody");
 
-        // Nettoyage du tableau
-        tbody.innerHTML = "";
+            // Nettoyage du tableau
+            tbody.innerHTML = "";
 
-        const row = document.createElement("tr");
-        for (let i = 0; i < parts.length; i++) {
-            const cell = document.createElement("td");
-            cell.textContent = parts[i] || ""; // Vide si pas assez de parties
-            row.appendChild(cell);
-        }
+            const row = document.createElement("tr");
+            for (let i = 0; i < parts.length; i++) {
+              const cell = document.createElement("td");
+              cell.textContent = parts[i] || ""; // Vide si pas assez de parties
+              row.appendChild(cell);
+            }
 
-        tbody.appendChild(row);
+            tbody.appendChild(row);
 
-        changeText(data)
-        updateExplanation(data.tour, data.qr);
-    })
-    .catch(error => {
-        console.error("Erreur:", error);
-    });
-});
+            changeText(data);
+            updateExplanation(data.tour, data.qr);
+          })
+          .catch((error) => {
+            console.error("Erreur:", error);
+          });
+      });
 
+    document
+      .getElementById("form_control_next")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
 
-document.getElementById("form_control_next").addEventListener("submit", function(event) {
-    event.preventDefault();
+        const csrfToken = document.querySelector(
+          "[name=csrfmiddlewaretoken]"
+        ).value;
 
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    fetch("", {
-        method: "POST",
-        headers: {
+        fetch("", {
+          method: "POST",
+          headers: {
             "X-CSRFToken": csrfToken,
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ "command" : "next" })
-    })
-    .then(response => response.json())
-    .then(data => {
-        changeText(data)
-        updateExplanation(data.tour, data.qr);
-        highlightTour(data.tour);
-        document.getElementById("keystream").innerText = data.keystream;
-        document.getElementById("msghex").innerText = data.msghex;
-        document.getElementById("xorres").innerText = data.res.slice(0,64) + "...";
-        document.getElementById("mackey").innerText = data.mackey;
-    })
-    .catch(error => {
-        console.error("Erreur:", error);
-    });
-});
+          },
+          body: new URLSearchParams({ command: "next" }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            changeText(data);
+            updateExplanation(data.tour, data.qr);
+            highlightTour(data.tour);
+            document.getElementById("keystream").innerText = data.keystream;
+            document.getElementById("msghex").innerText = data.msghex;
+            document.getElementById("xorres").innerText =
+              data.res.slice(0, 64) + "...";
+            document.getElementById("mackey").innerText = data.mackey;
+          })
+          .catch((error) => {
+            console.error("Erreur:", error);
+          });
+      });
 
-document.getElementById("form_control_previous").addEventListener("submit", function(event) {
-    event.preventDefault();
+    document
+      .getElementById("form_control_previous")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
 
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfToken = document.querySelector(
+          "[name=csrfmiddlewaretoken]"
+        ).value;
 
-    fetch("", {
-        method: "POST",
-        headers: {
+        fetch("", {
+          method: "POST",
+          headers: {
             "X-CSRFToken": csrfToken,
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ "command" : "previous" })
-    })
-    .then(response => response.json())
-    .then(data => {
-        changeText(data)
-        updateExplanation(data.tour, data.qr);
-        highlightTour(data.tour);
-        document.getElementById("keystream").innerText = data.keystream;
-        document.getElementById("msghex").innerText = data.msghex;
-        document.getElementById("xorres").innerText = data.res.slice(0,64) + "...";
-        document.getElementById("mackey").innerText = data.mackey;
-    })
-    .catch(error => {
-        console.error("Erreur:", error);
-    });
-});
+          },
+          body: new URLSearchParams({ command: "previous" }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            changeText(data);
+            updateExplanation(data.tour, data.qr);
+            highlightTour(data.tour);
+            document.getElementById("keystream").innerText = data.keystream;
+            document.getElementById("msghex").innerText = data.msghex;
+            document.getElementById("xorres").innerText =
+              data.res.slice(0, 64) + "...";
+            document.getElementById("mackey").innerText = data.mackey;
+          })
+          .catch((error) => {
+            console.error("Erreur:", error);
+          });
+      });
 
-document.getElementById("form_control_reset").addEventListener("submit", function(event) {
-    event.preventDefault();
+    document
+      .getElementById("form_control_reset")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
 
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfToken = document.querySelector(
+          "[name=csrfmiddlewaretoken]"
+        ).value;
 
-    fetch("", {
-        method: "POST",
-        headers: {
+        fetch("", {
+          method: "POST",
+          headers: {
             "X-CSRFToken": csrfToken,
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ "command" : "reset" })
-    })
-    .then(response => response.json())
-    .then(data => {
-        changeText(data);
-        updateExplanation(data.tour, data.qr);
-        highlightTour(data.tour);
-        document.getElementById("keystream").innerText = data.keystream;
-        document.getElementById("msghex").innerText = data.msghex;
-        document.getElementById("xorres").innerText = data.res.slice(0,64) + "...";
-        document.getElementById("mackey").innerText = data.mackey;
-    })
-    .catch(error => {
-        console.error("Erreur:", error);
-    });
-});
+          },
+          body: new URLSearchParams({ command: "reset" }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            changeText(data);
+            updateExplanation(data.tour, data.qr);
+            highlightTour(data.tour);
+            document.getElementById("keystream").innerText = data.keystream;
+            document.getElementById("msghex").innerText = data.msghex;
+            document.getElementById("xorres").innerText =
+              data.res.slice(0, 64) + "...";
+            document.getElementById("mackey").innerText = data.mackey;
+          })
+          .catch((error) => {
+            console.error("Erreur:", error);
+          });
+      });
 
-document.getElementById("play").addEventListener("click", () => {
-    run = true;
+    document.getElementById("play").addEventListener("click", () => {
+      run = true;
 
-    const intervalId = setInterval(() => {
+      const intervalId = setInterval(() => {
         if (run) {
-            document.getElementById('buttonNext').click(); 
+          document.getElementById("buttonNext").click();
         } else {
-            clearInterval(intervalId); 
+          clearInterval(intervalId);
         }
-    }, 200);
-});
+      }, 200);
+    });
 
-document.getElementById("stop").addEventListener("click", () => {
-    run = false;
-});
+    document.getElementById("stop").addEventListener("click", () => {
+      run = false;
+    });
 
+    const explanations = [
+      "Initialisation de la matrice avec les constantes de ChaCha20 et la clé de 256 bits.",
+      "QR 1 : Application du premier *Quarter Round* sur la colonne (c1, k1, k5, ct).",
+      "QR 2 : *Quarter Round* sur la colonne (c2, k2, k6, n1).",
+      "QR 3 : *Quarter Round* sur la colonne (c3, k3, k7, n2).",
+      "QR 4 : *Quarter Round* sur la colonne (c4, k4, k8, n3).",
+      "QR 5 : *Quarter Round* sur la diagonale (c1, k2, k7, n3).",
+      "QR 6 : *Quarter Round* sur la diagonale (c2, k3, k8, ct).",
+      "QR 7 : *Quarter Round* sur la diagonale (c3, k4, k5, n1).",
+      "QR 8 : *Quarter Round* sur la diagonale (c4, k1, k6, n2).",
+      "Fin du tour : les huit *Quarter Rounds* sont terminés — incrément du compteur.",
+      "Les 10 tours sont terminés : génération du keystream et chiffrement du bloc.",
+    ];
 
-const explanations = [
-    "Initialisation de la matrice avec les constantes de ChaCha20 et la clé de 256 bits.",
-    "QR 1 : Application du premier *Quarter Round* sur la colonne (c1, k1, k5, ct).",
-    "QR 2 : *Quarter Round* sur la colonne (c2, k2, k6, n1).",
-    "QR 3 : *Quarter Round* sur la colonne (c3, k3, k7, n2).",
-    "QR 4 : *Quarter Round* sur la colonne (c4, k4, k8, n3).",
-    "QR 5 : *Quarter Round* sur la diagonale (c1, k2, k7, n3).",
-    "QR 6 : *Quarter Round* sur la diagonale (c2, k3, k8, ct).",
-    "QR 7 : *Quarter Round* sur la diagonale (c3, k4, k5, n1).",
-    "QR 8 : *Quarter Round* sur la diagonale (c4, k1, k6, n2).",
-    "Fin du tour : les huit *Quarter Rounds* sont terminés — incrément du compteur.",
-    "Les 10 tours sont terminés : génération du keystream et chiffrement du bloc.",
-];
+    function updateExplanation(tour, qr) {
+      const expDiv = document.getElementById("explanation");
 
-function updateExplanation(tour, qr) {
-    const expDiv = document.getElementById("explanation");
+      nqr = qr - 1;
 
-    nqr = qr-1
-
-    if(tour === 0 && qr === 0) {
+      if (tour === 0 && qr === 0) {
         expDiv.innerHTML = explanations[0];
-    } else if (tour === 10) {
+      } else if (tour === 10) {
         expDiv.innerHTML = explanations[10];
-    } else if (nqr == -1) {
+      } else if (nqr == -1) {
         expDiv.innerHTML = explanations[9];
-    } else if (nqr < 8) {
+      } else if (nqr < 8) {
         expDiv.innerHTML = explanations[nqr + 1];
-    } 
-}
-
-</script>
+      }
+    }
+  </script>
+</body>

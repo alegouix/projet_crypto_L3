@@ -101,6 +101,18 @@ button:active {
   background: #1e1e1e;
 }
 
+.matrix-controls form {
+  margin: 0;
+  display: inline;
+}
+
+.matrix-controls button {
+  line-height: 2;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
 .matrix-controls {
   display: flex;
   flex-wrap: wrap;
