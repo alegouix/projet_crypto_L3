@@ -11,46 +11,74 @@ from .Chacha import Chacha
 previous_states = []
 
 def create_context(chacha: Chacha):
+    # --- Résultat chiffré (concaténé sur tous les blocs)
     res = ""
     for k in range(len(chacha.enc_msg)):
         for i in range(16):
             v = chacha.enc_msg[k][i].value
             res += f"{v:08x}"
 
-    key_str = ""
-    for v in chacha.key:
-        key_str += f"{v.value:08x}"
+    # --- Clé principale (clé ChaCha20)
+    key_str = "".join(f"{v.value:08x}" for v in chacha.key)
 
+    # --- Décryptage du message
     decrypt = chacha.decrypt()
-    
+
+    # --- Message original en hexadécimal (pour affichage XOR)
+    msg_hex = chacha.msg.hex()
+
+    # --- Keystream actuel (si généré)
+    if chacha.keystream:
+        last_keystream = chacha.keystream[-1]
+        keystream_hex = " ".join(f"{x.value:08x}" for x in last_keystream)
+    else:
+        keystream_hex = "—"
+
+    # --- Calcul d’un XOR partiel (visuel)
+    if chacha.enc_msg and chacha.keystream:
+        xor_preview = []
+        for i in range(min(4, len(chacha.enc_msg[-1]))):
+            v_enc = chacha.enc_msg[-1][i].value
+            v_key = chacha.keystream[-1][i].value
+            xor_preview.append(f"{v_enc ^ v_key:08x}")
+        xor_hex = " ".join(xor_preview)
+    else:
+        xor_hex = "—"
+
+    # --- Clé dérivée pour Poly1305 (premier bloc ChaCha20 avec compteur=0)
+    try:
+        mac_key = "".join(f"{x.value:08x}" for x in chacha.init_matrice[:8])
+    except Exception:
+        mac_key = "—"
+
     return {
-            "key_str": key_str,
-            "c1": f"{chacha.matrice[0].value:08x}",
-            "c2": f"{chacha.matrice[1].value:08x}",
-            "c3": f"{chacha.matrice[2].value:08x}",
-            "c4": f"{chacha.matrice[3].value:08x}",
-            "k1": f"{chacha.matrice[4].value:08x}",
-            "k2": f"{chacha.matrice[5].value:08x}",
-            "k3": f"{chacha.matrice[6].value:08x}",
-            "k4": f"{chacha.matrice[7].value:08x}",
-            "k5": f"{chacha.matrice[8].value:08x}",
-            "k6": f"{chacha.matrice[9].value:08x}",
-            "k7": f"{chacha.matrice[10].value:08x}",
-            "k8": f"{chacha.matrice[11].value:08x}",
-            "ct": f"{chacha.matrice[12].value:08x}",
-            "n1": f"{chacha.matrice[13].value:08x}",
-            "n2": f"{chacha.matrice[14].value:08x}",
-            "n3": f"{chacha.matrice[15].value:08x}",
-            "mac": chacha.MAC.hex(),
-            "res": res,
-            "decrypt": decrypt,
-            "tour": chacha.tour,
-            "qr": chacha.qr,
-            "keystream": " ".join(f"{x.value:08x}" for x in chacha.init_matrice[:4]),
-            "mackey": "".join(f"{x.value:08x}" for x in chacha.init_matrice[:8]),
-            "xorres": "",
-            "msghex": chacha.msg.hex(),
-        }
+        "c1": f"{chacha.matrice[0].value:08x}",
+        "c2": f"{chacha.matrice[1].value:08x}",
+        "c3": f"{chacha.matrice[2].value:08x}",
+        "c4": f"{chacha.matrice[3].value:08x}",
+        "k1": f"{chacha.matrice[4].value:08x}",
+        "k2": f"{chacha.matrice[5].value:08x}",
+        "k3": f"{chacha.matrice[6].value:08x}",
+        "k4": f"{chacha.matrice[7].value:08x}",
+        "k5": f"{chacha.matrice[8].value:08x}",
+        "k6": f"{chacha.matrice[9].value:08x}",
+        "k7": f"{chacha.matrice[10].value:08x}",
+        "k8": f"{chacha.matrice[11].value:08x}",
+        "ct": f"{chacha.matrice[12].value:08x}",
+        "n1": f"{chacha.matrice[13].value:08x}",
+        "n2": f"{chacha.matrice[14].value:08x}",
+        "n3": f"{chacha.matrice[15].value:08x}",
+        "tour": chacha.tour,
+        "qr": chacha.qr,
+        "key_str": key_str,
+        "mac": chacha.MAC.hex(),
+        "res": res,
+        "decrypt": decrypt,
+        "msghex": msg_hex,
+        "keystream": keystream_hex,
+        "xorres": xor_hex,
+        "mackey": mac_key,
+    }
 
 @csrf_exempt
 def index(request):

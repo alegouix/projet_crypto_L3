@@ -191,7 +191,7 @@ function changeText(data) {
     for (const [key, value] of Object.entries(data)) {
         dom = document.getElementById(key)
         if(dom != null) {
-            if(dom.innerHTML != value && !["res", "decrypt", "mac", "key_str"].includes(key) ) {
+            if(dom.innerHTML != value && !["res", "decrypt", "mac", "key_str", "msghex", "keystream", "xorres", "mackey"].includes(key) ) {
                 dom.style.color = '#ff0066';
             } else {
                 dom.style.color = '#ffffff'
