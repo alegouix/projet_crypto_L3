@@ -46,6 +46,10 @@ def create_context(chacha: Chacha):
             "decrypt": decrypt,
             "tour": chacha.tour,
             "qr": chacha.qr,
+            "keystream": " ".join(f"{x.value:08x}" for x in chacha.init_matrice[:4]),
+            "mackey": "".join(f"{x.value:08x}" for x in chacha.init_matrice[:8]),
+            "xorres": "",
+            "msghex": chacha.msg.hex(),
         }
 
 @csrf_exempt

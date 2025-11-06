@@ -6,11 +6,33 @@
 
 <body>
 <div class="page-container">
+
+  <!-- === En-tête === -->
   <header>
     <h2>Démo ChaCha20–Poly1305</h2>
-    <p class="subtitle">Visualisation pas à pas du chiffrement et du calcul du MAC</p>
+    <p class="subtitle">Visualisation pas à pas du chiffrement et du calcul d’authentification</p>
   </header>
 
+  <!-- === Résumé général === -->
+  <section class="summary-section">
+    <h3>Résumé du fonctionnement</h3>
+    <div class="summary-box">
+      <ol>
+        <li><b>ChaCha20</b> génère un <i>keystream</i> de 512 bits à partir de :
+          <ul>
+            <li>une clé de 256 bits,</li>
+            <li>un compteur de bloc (32 bits),</li>
+            <li>et un nonce de 96 bits.</li>
+          </ul>
+        </li>
+        <li>Chaque bloc de message est <b>chiffré par XOR</b> avec le keystream.</li>
+        <li><b>Poly1305</b> calcule ensuite un <b>MAC</b> (Message Authentication Code)
+          pour vérifier l’intégrité du message chiffré.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- === Message === -->
   <section class="input-section">
     <h3>Message à chiffrer</h3>
     <form id="form" method="POST" class="form-message">
@@ -29,101 +51,132 @@
             {% for part in parties %}
               <td>{{ part }}</td>
             {% endfor %}
-            {% if parties_count < 5 %}
-              {% for _ in "12345"|slice:":{{ 5|add:-parties_count }}" %}
-                <td></td>
-              {% endfor %}
-            {% endif %}
           </tr>
         {% endwith %}
       </tbody>
     </table>
   </section>
 
+  <!-- === Clé et progression === -->
   <section>
-    <h3>Clé utilisée</h3>
+    <h3>Clé utilisée (256 bits)</h3>
     <div class="key-box" id="key_str">{{ key_str }}</div>
+
+    <h3>Progression des tours</h3>
+    <div class="tour-progress">
+      {% for i in "12345678910" %}
+        <span class="dot" id="dot{{ forloop.counter }}"></span>
+      {% endfor %}
+    </div>
   </section>
 
+  <!-- === Explication dynamique === -->
   <section class="explanation-section">
-    <h3>Explications sur l’étape actuelle</h3>
+    <h3>Explication de l’étape actuelle</h3>
     <div id="explanation" class="explanation-box">
       En attente de la première étape...
     </div>
   </section>
 
-  <section class="matrix-section">
-    <div class="matrix-flex">
-      <div class="matrix-container">
-        <h3>Matrice ChaCha20</h3>
-        <table class="data-table matrix-table">
-          <tbody>
-            <tr>
-              <td id="c1">{{ c1 }}</td><td id="c2">{{ c2 }}</td><td id="c3">{{ c3 }}</td><td id="c4">{{ c4 }}</td>
-            </tr>
-            <tr>
-              <td id="k1">{{ k1 }}</td><td id="k2">{{ k2 }}</td><td id="k3">{{ k3 }}</td><td id="k4">{{ k4 }}</td>
-            </tr>
-            <tr>
-              <td id="k5">{{ k5 }}</td><td id="k6">{{ k6 }}</td><td id="k7">{{ k7 }}</td><td id="k8">{{ k8 }}</td>
-            </tr>
-            <tr>
-              <td id="ct">{{ ct }}</td><td id="n1">{{ n1 }}</td><td id="n2">{{ n2 }}</td><td id="n3">{{ n3 }}</td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- === Matrice et QR === -->
+    <section class="matrix-section">
+        <div class="matrix-flex">
+            <div class="matrix-container">
+                <h3>Matrice ChaCha20</h3>
 
-        <div class="matrix-controls">
-          <form id="form_control_previous" method="POST">{% csrf_token %}
-            <button id="buttonPrevious" type="submit">⟸ Étape précédente</button>
-          </form>
-          <form id="form_control_next" method="POST">{% csrf_token %}
-            <button id="buttonNext" type="submit">Prochaine étape ⟹</button>
-          </form>
-          <form id="form_control_reset" method="POST">{% csrf_token %}
-            <button type="submit">Réinitialiser</button>
-          </form>
-          <button id="play">▶ Lecture auto</button>
-          <button id="stop">■ Stop</button>
+                <div class="nonce-info">
+                    <p><b>ct</b> : compteur (incrémenté chaque bloc)
+                        &nbsp;|&nbsp; <b>n1, n2, n3</b> : nonce (unique par message)</p>
+                </div>
+
+                <table class="data-table matrix-table">
+                    <tbody>
+                        <tr>
+                            <td id="c1">{{ c1 }}</td>
+                            <td id="c2">{{ c2 }}</td>
+                            <td id="c3">{{ c3 }}</td>
+                            <td id="c4">{{ c4 }}</td>
+                        </tr>
+                        <tr>
+                            <td id="k1">{{ k1 }}</td>
+                            <td id="k2">{{ k2 }}</td>
+                            <td id="k3">{{ k3 }}</td>
+                            <td id="k4">{{ k4 }}</td>
+                        </tr>
+                        <tr>
+                            <td id="k5">{{ k5 }}</td>
+                            <td id="k6">{{ k6 }}</td>
+                            <td id="k7">{{ k7 }}</td>
+                            <td id="k8">{{ k8 }}</td>
+                        </tr>
+                        <tr>
+                            <td id="ct">{{ ct }}</td>
+                            <td id="n1">{{ n1 }}</td>
+                            <td id="n2">{{ n2 }}</td>
+                            <td id="n3">{{ n3 }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="matrix-controls">
+                    <form id="form_control_previous" method="POST">{% csrf_token %}
+                        <button id="buttonPrevious" type="submit">⟸ Étape précédente</button>
+                    </form>
+                    <form id="form_control_next" method="POST">{% csrf_token %}
+                        <button id="buttonNext" type="submit">Prochaine étape ⟹</button>
+                    </form>
+                    <form id="form_control_reset" method="POST">{% csrf_token %}
+                        <button type="submit">Réinitialiser</button>
+                    </form>
+                    <button id="play">▶ Lecture auto</button>
+                    <button id="stop">■ Stop</button>
+                </div>
+            </div>
+
+            <aside class="qr-explanation">
+                <h3>Quarter Round (QR)</h3>
+                <p>Un <b>Quarter Round</b> agit sur 4 mots de 32 bits (<b>a, b, c, d</b>) :</p>
+                <ul>
+                    <li><b>Addition mod 2³²</b> : <code>a = (a + b)</code></li>
+                    <li><b>XOR</b> : <code>d = d XOR a</code></li>
+                    <li><b>Rotation gauche</b> : <code>d = ROTL(d, n)</code></li>
+                </ul>
+                <p>Séquence complète :</p>
+                <ol>
+                    <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
+                    <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
+                    <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
+                    <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
+                </ol>
+                <p class="note">→ Chaque bit se propage dans tout le bloc après quelques tours.</p>
+            </aside>
         </div>
-      </div>
+    </section>
 
-      <aside class="qr-explanation">
-        <h3>Quarter Round (QR) – principe</h3>
-        <p>
-          Un <b>Quarter Round</b> agit sur 4 mots de 32 bits (<b>a, b, c, d</b>)
-          en combinant :
-        </p>
-        <ul>
-          <li><b>Addition mod 2³²</b> : <code>a = (a + b) mod 2³²</code></li>
-          <li><b>XOR</b> : <code>d = d XOR a</code></li>
-          <li><b>Rotation gauche</b> : <code>d = ROTL(d, n)</code></li>
-        </ul>
-        <p>La séquence complète :</p>
-        <ol>
-          <li><code>a += b; d ^= a; d = ROTL(d,16)</code></li>
-          <li><code>c += d; b ^= c; b = ROTL(b,12)</code></li>
-          <li><code>a += b; d ^= a; d = ROTL(d,8)</code></li>
-          <li><code>c += d; b ^= c; b = ROTL(b,7)</code></li>
-        </ol>
-        <p class="note">
-          → Chaque bit de la clé, du compteur ou du nonce influence rapidement tout le bloc.
-        </p>
-      </aside>
+  <!-- === Keystream et XOR === -->
+  <section>
+    <h3>Keystream et opération XOR</h3>
+    <div class="xor-box">
+      <p><b>Keystream :</b> <span id="keystream">—</span></p>
+      <p><b>Message (hex) :</b> <span id="msghex">—</span></p>
+      <p><b>Résultat XOR :</b> <span id="xorres">—</span></p>
     </div>
   </section>
 
+  <!-- === MAC Poly1305 === -->
   <section>
+    <h3>Clé dérivée pour Poly1305</h3>
+    <div class="key-box" id="mackey">—</div>
+
     <h3>MAC généré (Poly1305)</h3>
     <div class="key-box" id="mac">{{ mac }}</div>
   </section>
 
+  <!-- === Résultats === -->
   <section>
     <h3>Résultat chiffré</h3>
     <div class="key-box" id="res">{{ res }}</div>
-  </section>
 
-  <section>
     <h3>Message déchiffré</h3>
     <div class="key-box" id="decrypt">{{ decrypt }}</div>
   </section>
@@ -146,6 +199,12 @@ function changeText(data) {
             dom.innerHTML = value
         }
     }
+}
+
+function highlightTour(tour) {
+  for (let i = 1; i <= 10; i++) {
+    document.getElementById(`dot${i}`).style.background = i <= tour ? "#4dabf7" : "#444";
+  }
 }
 
 document.getElementById("form").addEventListener("submit", function(event) {
@@ -207,6 +266,11 @@ document.getElementById("form_control_next").addEventListener("submit", function
     .then(data => {
         changeText(data)
         updateExplanation(data.tour, data.qr);
+        highlightTour(data.tour);
+        document.getElementById("keystream").innerText = data.keystream;
+        document.getElementById("msghex").innerText = data.msghex;
+        document.getElementById("xorres").innerText = data.res.slice(0,64) + "...";
+        document.getElementById("mackey").innerText = data.mackey;
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -229,9 +293,13 @@ document.getElementById("form_control_previous").addEventListener("submit", func
     })
     .then(response => response.json())
     .then(data => {
-        //console.log(data);
         changeText(data)
         updateExplanation(data.tour, data.qr);
+        highlightTour(data.tour);
+        document.getElementById("keystream").innerText = data.keystream;
+        document.getElementById("msghex").innerText = data.msghex;
+        document.getElementById("xorres").innerText = data.res.slice(0,64) + "...";
+        document.getElementById("mackey").innerText = data.mackey;
     })
     .catch(error => {
         console.error("Erreur:", error);
@@ -254,8 +322,13 @@ document.getElementById("form_control_reset").addEventListener("submit", functio
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
-        changeText(data)
+        changeText(data);
+        updateExplanation(data.tour, data.qr);
+        highlightTour(data.tour);
+        document.getElementById("keystream").innerText = data.keystream;
+        document.getElementById("msghex").innerText = data.msghex;
+        document.getElementById("xorres").innerText = data.res.slice(0,64) + "...";
+        document.getElementById("mackey").innerText = data.mackey;
     })
     .catch(error => {
         console.error("Erreur:", error);
